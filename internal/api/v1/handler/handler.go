@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -57,13 +56,7 @@ func AutoParsedHandler[Request any, Response any](handle func(*fiber.Ctx, Reques
 			return err
 		}
 
-		wrappedResp := common.APIResponse{
-			Code:      common.ResultCodeSuccess,
-			Success:   true,
-			Message:   "success",
-			Timestamp: time.Now().Unix(),
-			Data:      resp,
-		}
+		wrappedResp := common.MakeSuccessAPIResponse(resp)
 		return c.JSON(wrappedResp)
 	}
 }
