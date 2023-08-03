@@ -3,22 +3,11 @@ package service
 import (
 	"context"
 
-	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 	"subflow-core-go/internal/api/common"
+	"subflow-core-go/internal/api/constants"
 	"subflow-core-go/pkg/ent"
+	"subflow-core-go/pkg/ent/user"
 )
-
-type User struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-type GetAllUserRequest struct {
-	PerPage int `json:"perPage"`
-}
-
-type GetAllUserResponse = []User
 
 type CreateUserRequest struct {
 	Username   string `json:"username" validate:"required"`
@@ -27,38 +16,39 @@ type CreateUserRequest struct {
 	RemoteAddr string
 }
 
-func (s *Service) GetAllUser(ctx context.Context, req GetAllUserRequest) (*GetAllUserResponse, error) {
-	var users []User
-	u, err := s.db.User.Query().Limit(req.PerPage).All(ctx)
+func (s *Service) FindUserByUsername(ctx context.Context, username string) (*ent.User, error) {
+	return s.db.User.
+		Query().
+		Where(user.Username(username)).
+		Only(ctx)
+}
 
-	for _, user := range u {
-		users = append(
-			users, User{
-				ID:   user.ID,
-				Name: user.Username,
-			},
-		)
-	}
-
-	return &users, err
+func (s *Service) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
+	return s.db.User.
+		Query().
+		Where(user.Email(email)).
+		Only(ctx)
 }
 
 func (s *Service) CreateUser(ctx context.Context, req CreateUserRequest) (*ent.User, error) {
-	pwdHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		zap.S().Errorw(
-			"Failed to crypt password",
-			"req", req,
-			"err", err,
-		)
-		return nil, err
+	if u, _ := s.FindUserByUsername(ctx, req.Username); u != nil {
+		return nil, &common.BusinessError{
+			Code:    common.ResultCreateUserFailed,
+			Message: "用户名已存在",
+		}
+	}
+	if u, _ := s.FindUserByEmail(ctx, req.Email); u != nil {
+		return nil, &common.BusinessError{
+			Code:    common.ResultCreateUserFailed,
+			Message: "邮箱已被使用",
+		}
 	}
 	return s.db.User.
 		Create().
 		SetUsername(req.Username).
-		SetPassword(string(pwdHash)).
+		SetPassword(req.Password).
 		SetEmail(req.Email).
-		SetStatus(int(common.UserStatusActive)).
+		SetStatus(int(constants.UserStatusActive)).
 		SetRegisterIP(req.RemoteAddr).
 		Save(ctx)
 }
