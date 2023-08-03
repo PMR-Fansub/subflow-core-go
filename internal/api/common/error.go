@@ -3,29 +3,51 @@ package common
 import (
 	"errors"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/utils"
+	"go.uber.org/zap"
 )
 
-type ErrorResponse struct {
-	Message    string `json:"message"`
-	Error      string `json:"error"`
-	StatusCode int    `json:"statusCode"`
+type BusinessError struct {
+	Code    Result
+	Message string
+}
+
+func (e *BusinessError) Error() string {
+	return e.Message
 }
 
 func ErrorHandler(c *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
+	var resp *APIResponse
 
-	var e *fiber.Error
-	if errors.As(err, &e) {
-		code = e.Code
+	var fiberErr *fiber.Error
+	if errors.As(err, &fiberErr) {
+		resp = MakeAPIResponseWithMsg(ResultFailed, nil, fiberErr.Message)
+		return c.Status(fiberErr.Code).JSON(resp)
 	}
 
-	return c.Status(code).JSON(
-		&ErrorResponse{
-			StatusCode: code,
-			Message:    err.Error(),
-			Error:      utils.ToLower(utils.StatusMessage(code)),
-		},
+	var businessErr *BusinessError
+	if errors.As(err, &businessErr) {
+		if len(businessErr.Message) > 0 {
+			resp = MakeAPIResponseWithMsg(businessErr.Code, nil, businessErr.Message)
+		} else {
+			resp = MakeAPIResponse(businessErr.Code, nil)
+		}
+		return c.Status(businessErr.Code.HttpCode).JSON(resp)
+	}
+
+	var validationErrs validator.ValidationErrors
+	if errors.As(err, &validationErrs) {
+		result := ResultFormInvalid
+		resp = MakeAPIResponse(result, validationErrs.Error())
+		return c.Status(result.HttpCode).JSON(resp)
+	}
+
+	zap.S().Errorw(
+		"Unknown error handled",
+		"err", err,
 	)
+	unknown := ResultUnknown
+	return c.Status(unknown.HttpCode).
+		JSON(MakeAPIResponseWithMsg(unknown, nil, err.Error()))
 }
