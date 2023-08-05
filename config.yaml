@@ -1,7 +1,8 @@
 server:
   type: dev
   port: 8000
+  signing-key: test
 
 datasource:
   type: sqlite
-  dsn: F:\projects\subflow-core-go\test.db?_fk=1
+  dsn: test.db?_fk=1
