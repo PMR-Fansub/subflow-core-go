@@ -4,9 +4,10 @@ import "github.com/ilyakaznacheev/cleanenv"
 
 type Config struct {
 	Server struct {
-		Type   string `yaml:"type" env:"SERVER_TYPE" env-default:"dev"`
-		IpAddr string `yaml:"ip" env:"SERVER_IP" env-default:"localhost"`
-		Port   uint16 `yaml:"port" env:"SERVER_PORT" env-default:"8000"`
+		Type       string `yaml:"type" env:"SERVER_TYPE" env-default:"dev"`
+		IpAddr     string `yaml:"ip" env:"SERVER_IP" env-default:"localhost"`
+		Port       uint16 `yaml:"port" env:"SERVER_PORT" env-default:"8000"`
+		SigningKey string `yaml:"signing-key" env:"SIGNING_KEY" env-default:"secret"`
 	} `yaml:"server"`
 	Datasource struct {
 		Type            string `yaml:"type"`

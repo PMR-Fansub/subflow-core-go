@@ -23,7 +23,7 @@ func New(service *service.Service, cfg *config.Config) *Handler {
 	}
 }
 
-func AutoParsedHandler[Request any, Response any](handle func(*fiber.Ctx, Request) (Response, error)) fiber.Handler {
+func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx, Request) (Response, error)) fiber.Handler {
 	validate := validator.New()
 
 	return func(c *fiber.Ctx) error {
