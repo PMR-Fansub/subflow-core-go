@@ -35,15 +35,7 @@ func New() *fiber.App {
 }
 
 func Start(lifestyle fx.Lifecycle, app *fiber.App, cfg *config.Config, rv1 *v1.Router) {
-	app.Use(requestid.New())
-	app.Use(
-		fiberzap.New(
-			fiberzap.Config{
-				Logger: zap.L(),
-				Fields: []string{"latency", "status", "method", "url", "requestId"},
-			},
-		),
-	)
+	setupMiddlewares(app, cfg)
 
 	rv1.Setup()
 
@@ -66,5 +58,25 @@ func Start(lifestyle fx.Lifecycle, app *fiber.App, cfg *config.Config, rv1 *v1.R
 				return app.Shutdown()
 			},
 		},
+	)
+}
+
+func setupMiddlewares(app *fiber.App, cfg *config.Config) {
+	app.Use(
+		cors.New(
+			cors.Config{
+				AllowCredentials: true,
+				AllowOrigins:     cfg.Server.CookieHost,
+			},
+		),
+	)
+	app.Use(requestid.New())
+	app.Use(
+		fiberzap.New(
+			fiberzap.Config{
+				Logger: zap.L(),
+				Fields: []string{"latency", "status", "method", "url", "requestId"},
+			},
+		),
 	)
 }

@@ -8,6 +8,7 @@ type Config struct {
 		IpAddr     string `yaml:"ip" env:"SERVER_IP" env-default:"localhost"`
 		Port       uint16 `yaml:"port" env:"SERVER_PORT" env-default:"8000"`
 		SigningKey string `yaml:"signing-key" env:"SIGNING_KEY" env-default:"secret"`
+		CookieHost string `yaml:"cookie-host" env:"COOKIE_HOST" env-default:"http://localhost:3000"`
 	} `yaml:"server"`
 	Datasource struct {
 		Type            string `yaml:"type"`

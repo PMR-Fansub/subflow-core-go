@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"reflect"
+	"runtime"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -28,17 +30,29 @@ func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx,
 
 	return func(c *fiber.Ctx) error {
 		var req Request
+		var err error
 
-		if err := c.BodyParser(&req); err != nil && !errors.Is(err, fiber.ErrUnprocessableEntity) {
-			zap.S().Warnw(
+		err = c.ParamsParser(&req)
+		if err != nil {
+			zap.S().Errorw(
+				"Failed to parse params",
+				"err", err,
+			)
+			return err
+		}
+
+		err = c.BodyParser(&req)
+		if err != nil && !errors.Is(err, fiber.ErrUnprocessableEntity) {
+			zap.S().Errorw(
 				"Failed to parse body",
 				"err", err,
 			)
 			return err
 		}
 
-		if err := c.QueryParser(&req); err != nil {
-			zap.S().Warnw(
+		err = c.QueryParser(&req)
+		if err != nil {
+			zap.S().Errorw(
 				"Failed to parse query",
 				"err", err,
 			)
@@ -51,6 +65,11 @@ func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx,
 			return err
 		}
 
+		zap.S().Debugw(
+			"Call handler",
+			"handler", runtime.FuncForPC(reflect.ValueOf(handle).Pointer()).Name(),
+			"req", req,
+		)
 		resp, err := handle(c, req)
 		if err != nil {
 			return err
