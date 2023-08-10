@@ -2,20 +2,49 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"subflow-core-go/internal/api/common"
 	"subflow-core-go/internal/api/constants"
+	"subflow-core-go/internal/api/v1/service/dto"
 	"subflow-core-go/pkg/ent"
 	"subflow-core-go/pkg/ent/user"
 )
 
-type CreateUserRequest struct {
-	Username   string `json:"username" validate:"required"`
-	Password   string `json:"password" validate:"required"`
-	Email      string `json:"email" validate:"required,email"`
-	RemoteAddr string
+func GetBasicInfoFromUser(u *ent.User) *dto.UserBasicInfo {
+	if u == nil {
+		return nil
+	}
+	return &dto.UserBasicInfo{
+		Id:       u.ID,
+		Username: u.Username,
+		Email:    u.Email,
+		Nickname: u.Nickname,
+		Avatar:   u.Avatar,
+	}
+}
+
+func GetInfoFromUser(u *ent.User) *dto.UserInfo {
+	if u == nil {
+		return nil
+	}
+	return &dto.UserInfo{
+		UserBasicInfo: GetBasicInfoFromUser(u),
+		RegisterTime:  &u.RegisteredAt,
+		RegisterIP:    u.RegisterIP,
+		LoginTime:     &u.LastLoggedAt,
+		LoginIP:       u.LoginIP,
+	}
+}
+
+func (s *Service) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
+	return s.db.User.
+		Query().
+		Where(user.ID(id)).
+		Only(ctx)
 }
 
 func (s *Service) FindUserByUsername(ctx context.Context, username string) (*ent.User, error) {
@@ -32,7 +61,7 @@ func (s *Service) FindUserByEmail(ctx context.Context, email string) (*ent.User,
 		Only(ctx)
 }
 
-func (s *Service) CreateUser(ctx context.Context, req *CreateUserRequest) (*ent.User, error) {
+func (s *Service) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
 	if u, _ := s.FindUserByUsername(ctx, req.Username); u != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreateUserFailed,
@@ -60,6 +89,7 @@ func (s *Service) CreateUser(ctx context.Context, req *CreateUserRequest) (*ent.
 		SetUsername(req.Username).
 		SetPassword(string(encryptedPwd)).
 		SetEmail(req.Email).
+		SetNickname(req.Username).
 		SetStatus(int(constants.UserStatusActive)).
 		SetRegisterIP(req.RemoteAddr).
 		Save(ctx)
@@ -78,4 +108,30 @@ func (s *Service) VerifyPwdByUsername(ctx context.Context, username string, pwd 
 		}
 	}
 	return u, nil
+}
+
+func (s *Service) RefreshLastLoginTime(ctx context.Context, u *ent.User, t time.Time) error {
+	return u.Update().
+		SetLastLoggedAt(t).
+		Exec(ctx)
+}
+
+func (s *Service) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error {
+	if len(req.Nickname) > 0 {
+		err := s.db.User.
+			UpdateOneID(req.Id).
+			SetNickname(req.Nickname).
+			Exec(ctx)
+		switch {
+		case ent.IsNotFound(err):
+			return &common.BusinessError{
+				Code:    common.ResultNotFound,
+				Message: fmt.Sprintf("用户不存在 (UID: %d)", req.Id),
+			}
+		case err != nil:
+			return err
+		}
+	}
+
+	return nil
 }

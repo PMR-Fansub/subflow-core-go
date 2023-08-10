@@ -7,10 +7,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"subflow-core-go/internal/api/helper"
 	"subflow-core-go/internal/api/v1/service"
+	"subflow-core-go/internal/api/v1/service/dto"
 )
 
 type RegisterRequest struct {
-	*service.CreateUserRequest
+	*dto.CreateUserRequest
 }
 
 type LoginRequest struct {
@@ -19,7 +20,8 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
+	Token    string             `json:"token"`
+	UserInfo *dto.UserBasicInfo `json:"userInfo"`
 }
 
 type RegisterResponse struct{}
@@ -38,6 +40,11 @@ func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) 
 		return nil, err
 	}
 
+	err = h.service.RefreshLastLoginTime(context.Background(), user, time.Now())
+	if err != nil {
+		return nil, err
+	}
+
 	token, err := helper.SignJWT(
 		h.config.Server.SigningKey, &helper.UserClaim{
 			UID:      user.ID,
@@ -50,5 +57,16 @@ func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) 
 	}
 
 	resp.Token = token
+	resp.UserInfo = service.GetBasicInfoFromUser(user)
+
+	c.Cookie(
+		&fiber.Cookie{
+			Name:     "auth_token",
+			Value:    token,
+			HTTPOnly: true,
+			Secure:   true,
+		},
+	)
+
 	return &resp, nil
 }

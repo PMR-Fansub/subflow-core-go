@@ -31,6 +31,7 @@ func NewRouter(app *fiber.App, handlerV1 *handler.Handler, cfg *config.Config) *
 			SigningMethod: "HS256",
 			SigningKey:    []byte(cfg.Server.SigningKey),
 			ErrorHandler:  jwtErrorHandler,
+			TokenLookup:   "cookie:auth_token,header:Authorization",
 		},
 	)
 	return &Router{
@@ -54,8 +55,9 @@ func (r *Router) SetupAuth() {
 
 func (r *Router) SetupUser() {
 	user := r.router.Group("user", jwtMiddleware)
-	user.Get("/", handler.WrapHandlerWithAutoParse(r.handler.GetUser))
-	// user.Post("/", r.handler.CreateUser)
+	user.Get("/", handler.WrapHandlerWithAutoParse(r.handler.GetCurrentUser))
+	user.Patch("/", handler.WrapHandlerWithAutoParse(r.handler.UpdateCurrentUser))
+	user.Patch("/:id", handler.WrapHandlerWithAutoParse(r.handler.UpdateUser))
 }
 
 func health(c *fiber.Ctx) error {
