@@ -1,8 +1,6 @@
 package helper
 
 import (
-	"encoding/json"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"go.uber.org/zap"
@@ -12,29 +10,11 @@ import (
 type UserClaim struct {
 	UID      int    `json:"uid"`
 	Username string `json:"username"`
-	Exp      int64  `json:"exp"`
+	jwt.RegisteredClaims
 }
 
 func SignJWT(signingKey string, claim *UserClaim) (string, error) {
-	claimBytes, err := json.Marshal(claim)
-	if err != nil {
-		zap.S().Errorw(
-			"Marshal failed",
-			"err", err,
-		)
-		return "", err
-	}
-	var claimMap jwt.MapClaims
-	err = json.Unmarshal(claimBytes, &claimMap)
-	if err != nil {
-		zap.S().Errorw(
-			"Unmarshal failed",
-			"err", err,
-		)
-		return "", err
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claimMap)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	t, err := token.SignedString([]byte(signingKey))
 	if err != nil {
 		return "", err
@@ -50,30 +30,12 @@ func GetClaimFromFiberCtx(c *fiber.Ctx) (*UserClaim, error) {
 			Code: common.ResultUnauthorized,
 		}
 	}
-	claimMap, ok := user.Claims.(jwt.MapClaims)
+	claim, ok := user.Claims.(*UserClaim)
 	if !ok {
-		zap.S().Error("Cannot get jwt claim from context")
+		zap.S().Error("Cannot assert custom claim type")
 		return nil, &common.BusinessError{
 			Code: common.ResultUnauthorized,
 		}
 	}
-
-	var claim UserClaim
-	bytes, err := json.Marshal(claimMap)
-	if err != nil {
-		zap.S().Errorw(
-			"Marshal error",
-			"err", err,
-		)
-		return nil, err
-	}
-	err = json.Unmarshal(bytes, &claim)
-	if err != nil {
-		zap.S().Errorw(
-			"Unmarshal error",
-			"err", err,
-		)
-		return nil, err
-	}
-	return &claim, nil
+	return claim, nil
 }
