@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 	"subflow-core-go/internal/api/helper"
 	"subflow-core-go/internal/api/v1/service"
 	"subflow-core-go/internal/api/v1/service/dto"
@@ -49,7 +50,9 @@ func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) 
 		h.config.Server.SigningKey, &helper.UserClaim{
 			UID:      user.ID,
 			Username: user.Username,
-			Exp:      time.Now().Add(time.Hour * 72).Unix(),
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(3 * 24 * time.Hour)),
+			},
 		},
 	)
 	if err != nil {

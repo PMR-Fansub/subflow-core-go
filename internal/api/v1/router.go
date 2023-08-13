@@ -8,6 +8,7 @@ import (
 	jwtware "github.com/gofiber/jwt/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"subflow-core-go/internal/api/common"
+	"subflow-core-go/internal/api/helper"
 	"subflow-core-go/internal/api/v1/handler"
 	"subflow-core-go/internal/config"
 )
@@ -32,6 +33,7 @@ func NewRouter(app *fiber.App, handlerV1 *handler.Handler, cfg *config.Config) *
 			SigningKey:    []byte(cfg.Server.SigningKey),
 			ErrorHandler:  jwtErrorHandler,
 			TokenLookup:   "cookie:auth_token,header:Authorization",
+			Claims:        &helper.UserClaim{},
 		},
 	)
 	return &Router{
