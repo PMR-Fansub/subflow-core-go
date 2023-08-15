@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"runtime"
 
+	"github.com/casbin/casbin/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -14,14 +15,16 @@ import (
 )
 
 type Handler struct {
-	service *service.Service
-	config  *config.Config
+	service  *service.Service
+	config   *config.Config
+	enforcer *casbin.Enforcer
 }
 
-func New(service *service.Service, cfg *config.Config) *Handler {
+func New(service *service.Service, cfg *config.Config, enforcer *casbin.Enforcer) *Handler {
 	return &Handler{
 		service,
 		cfg,
+		enforcer,
 	}
 }
 

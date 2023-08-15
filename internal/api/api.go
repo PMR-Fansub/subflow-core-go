@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/contrib/fiberzap"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
