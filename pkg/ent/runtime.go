@@ -16,7 +16,7 @@ func init() {
 	roleFields := schema.Role{}.Fields()
 	_ = roleFields
 	// roleDescName is the schema descriptor for name field.
-	roleDescName := roleFields[0].Descriptor()
+	roleDescName := roleFields[1].Descriptor()
 	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	role.NameValidator = roleDescName.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()

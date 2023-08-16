@@ -1,3 +1,3 @@
 package main
 
-//go:generate go run -mod=mod entgo.io/ent/cmd/ent generate ../../pkg/ent/schema
+//go:generate go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert ../../pkg/ent/schema

@@ -14,6 +14,7 @@ type Role struct {
 // Fields of the Role.
 func (Role) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("id").Unique(),
 		field.String("name").NotEmpty().Unique(),
 		field.String("desc"),
 	}
