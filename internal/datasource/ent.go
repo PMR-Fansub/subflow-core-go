@@ -2,15 +2,16 @@ package datasource
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"go.uber.org/zap"
-	"subflow-core-go/internal/config"
-	"subflow-core-go/pkg/ent"
-
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
+	"go.uber.org/zap"
+	"subflow-core-go/internal/api/constants"
+	"subflow-core-go/internal/config"
+	"subflow-core-go/pkg/ent"
 )
 
 func NewEntClient(cfg *config.Config) (*ent.Client, error) {
@@ -52,5 +53,37 @@ func NewEntClient(cfg *config.Config) (*ent.Client, error) {
 		return nil, err
 	}
 	zap.S().Info("Datasource auto migration finished")
+
+	// Predefined data initialize (if not exist)
+	if err := createPredefinedRoles(client); err != nil {
+		zap.S().Fatalw(
+			"Failed to initialize predefined roles",
+			"err", err,
+		)
+		return nil, err
+	}
+	zap.S().Info("Predefined roles initialized")
 	return client, nil
+}
+
+func createPredefinedRoles(client *ent.Client) error {
+	if client == nil {
+		return errors.New("invalid ent client")
+	}
+	roles := constants.GetAllRoles()
+	bulk := make([]*ent.RoleCreate, len(roles))
+	for i, role := range roles {
+		bulk[i] = client.Role.
+			Create().
+			SetID(role.ID).
+			SetName(role.Name).
+			SetDesc(role.Desc)
+	}
+
+	err := client.Role.
+		CreateBulk(bulk...).
+		OnConflict().
+		UpdateNewValues().
+		Exec(context.Background())
+	return err
 }

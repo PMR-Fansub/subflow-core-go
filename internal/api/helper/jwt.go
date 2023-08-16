@@ -30,6 +30,7 @@ func GetClaimFromFiberCtx(c *fiber.Ctx) (*UserClaim, error) {
 			Code: common.ResultUnauthorized,
 		}
 	}
+
 	claim, ok := user.Claims.(*UserClaim)
 	if !ok {
 		zap.S().Error("Cannot assert custom claim type")

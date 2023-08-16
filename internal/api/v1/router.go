@@ -67,7 +67,7 @@ func (r *Router) SetupUser() {
 	user.Patch(
 		"/:id",
 		r.casbinMiddleware.RequiresRoles(
-			[]string{constants.RoleAdmin, constants.RoleSuperuser},
+			[]string{constants.RoleNameAdmin, constants.RoleNameSuperuser},
 			casbinware.WithValidationRule(casbinware.AtLeastOneRule),
 		),
 		handler.WrapHandlerWithAutoParse(r.handler.UpdateUser),
