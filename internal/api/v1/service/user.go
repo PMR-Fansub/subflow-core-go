@@ -19,7 +19,7 @@ func GetBasicInfoFromUser(u *ent.User) *dto.UserBasicInfo {
 		return nil
 	}
 	return &dto.UserBasicInfo{
-		Id:       u.ID,
+		ID:       u.ID,
 		Username: u.Username,
 		Email:    u.Email,
 		Nickname: u.Nickname,
@@ -119,14 +119,14 @@ func (s *Service) RefreshLastLoginTime(ctx context.Context, u *ent.User, t time.
 func (s *Service) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error {
 	if len(req.Nickname) > 0 {
 		err := s.db.User.
-			UpdateOneID(req.Id).
+			UpdateOneID(req.ID).
 			SetNickname(req.Nickname).
 			Exec(ctx)
 		switch {
 		case ent.IsNotFound(err):
 			return &common.BusinessError{
 				Code:    common.ResultNotFound,
-				Message: fmt.Sprintf("用户不存在 (UID: %d)", req.Id),
+				Message: fmt.Sprintf("用户不存在 (UID: %d)", req.ID),
 			}
 		case err != nil:
 			return err

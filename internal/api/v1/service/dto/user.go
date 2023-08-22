@@ -10,12 +10,12 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserReq struct {
-	Id       int
+	ID       int
 	Nickname string
 }
 
 type UserBasicInfo struct {
-	Id       int    `json:"id"`
+	ID       int    `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Nickname string `json:"nickname"`
