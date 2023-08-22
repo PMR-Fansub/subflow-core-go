@@ -67,15 +67,15 @@ func (a *CasbinAdapter) AddPolicy(sec string, ptype string, rule []string) error
 	if ptype != "g" || len(rule) < 2 {
 		return errors.New("invalid parameters")
 	}
-	userId, _ := strconv.Atoi(rule[0])
+	userID, _ := strconv.Atoi(rule[0])
 	roleName := rule[1]
 
 	user, err := a.client.User.
 		Query().
-		Where(entuser.IDEQ(userId)).
+		Where(entuser.IDEQ(userID)).
 		Only(a.ctx)
 	if err != nil {
-		return fmt.Errorf("the uid %d does not exist", userId)
+		return fmt.Errorf("the uid %d does not exist", userID)
 	}
 
 	role, err := a.client.Role.
@@ -91,7 +91,7 @@ func (a *CasbinAdapter) AddPolicy(sec string, ptype string, rule []string) error
 		AddRoles(role).
 		Save(a.ctx)
 	if err != nil {
-		return fmt.Errorf("failed to add role %s to uid %d", roleName, userId)
+		return fmt.Errorf("failed to add role %s to uid %d", roleName, userID)
 	}
 	return nil
 }

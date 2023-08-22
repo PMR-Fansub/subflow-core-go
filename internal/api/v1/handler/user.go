@@ -16,7 +16,7 @@ type UpdateCurUserReq struct {
 }
 
 type UpdateUserReq struct {
-	Id int `params:"id"`
+	ID int `params:"id"`
 	UpdateCurUserReq
 }
 type UpdateUserInfoResp struct{}
@@ -42,7 +42,7 @@ func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*Update
 	}
 	err = h.service.UpdateUser(
 		context.Background(), &dto.UpdateUserReq{
-			Id:       claim.UID,
+			ID:       claim.UID,
 			Nickname: req.Nickname,
 		},
 	)
@@ -52,7 +52,7 @@ func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*Update
 func (h *Handler) UpdateUser(c *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoResp, error) {
 	err := h.service.UpdateUser(
 		context.Background(), &dto.UpdateUserReq{
-			Id:       req.Id,
+			ID:       req.ID,
 			Nickname: req.Nickname,
 		},
 	)

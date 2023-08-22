@@ -3,9 +3,9 @@ package constants
 type UserStatus int
 
 const (
-	UserStatusActive   UserStatus = 0
-	UserStatusInactive UserStatus = 1
-	UserStatusBanned   UserStatus = 2
-	UserStatusDeleted  UserStatus = 3
-	UserStatusUnknown  UserStatus = -1
+	UserStatusUnknown  UserStatus = 0
+	UserStatusActive   UserStatus = 1
+	UserStatusInactive UserStatus = 2
+	UserStatusBanned   UserStatus = 3
+	UserStatusDeleted  UserStatus = 4
 )
