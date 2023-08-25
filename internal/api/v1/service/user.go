@@ -131,9 +131,10 @@ func (s *Service) VerifyPwdByUsername(ctx context.Context, username string, pwd 
 	return u, nil
 }
 
-func (s *Service) RefreshLastLoginTime(ctx context.Context, u *ent.User, t time.Time) error {
+func (s *Service) RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.User, t time.Time, ip string) error {
 	return u.Update().
 		SetLastLoggedAt(t).
+		SetLoginIP(ip).
 		Exec(ctx)
 }
 

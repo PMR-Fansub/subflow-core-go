@@ -41,7 +41,7 @@ func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) 
 		return nil, err
 	}
 
-	err = h.service.RefreshLastLoginTime(context.Background(), user, time.Now())
+	err = h.service.RefreshLastLoginTimeAndIP(context.Background(), user, time.Now(), c.IP())
 	if err != nil {
 		return nil, err
 	}
