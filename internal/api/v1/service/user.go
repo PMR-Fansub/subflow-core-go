@@ -41,24 +41,45 @@ func GetInfoFromUser(u *ent.User) *dto.UserInfo {
 }
 
 func (s *Service) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
-	return s.db.User.
+	u, err := s.db.User.
 		Query().
 		Where(user.ID(id)).
 		Only(ctx)
+	if err != nil && ent.IsNotFound(err) {
+		return nil, &common.BusinessError{
+			Code:    common.ResultNotFound,
+			Message: "用户不存在",
+		}
+	}
+	return u, err
 }
 
 func (s *Service) FindUserByUsername(ctx context.Context, username string) (*ent.User, error) {
-	return s.db.User.
+	u, err := s.db.User.
 		Query().
 		Where(user.Username(username)).
 		Only(ctx)
+	if err != nil && ent.IsNotFound(err) {
+		return nil, &common.BusinessError{
+			Code:    common.ResultNotFound,
+			Message: "用户不存在",
+		}
+	}
+	return u, err
 }
 
 func (s *Service) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
-	return s.db.User.
+	u, err := s.db.User.
 		Query().
 		Where(user.Email(email)).
 		Only(ctx)
+	if err != nil && ent.IsNotFound(err) {
+		return nil, &common.BusinessError{
+			Code:    common.ResultNotFound,
+			Message: "用户不存在",
+		}
+	}
+	return u, err
 }
 
 func (s *Service) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
