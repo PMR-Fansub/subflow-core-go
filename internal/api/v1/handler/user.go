@@ -11,6 +11,10 @@ import (
 
 type GetUserReq struct{}
 
+type GetUserByIDReq struct {
+	ID int `params:"id"`
+}
+
 type UpdateCurUserReq struct {
 	Nickname string `json:"nickname"`
 }
@@ -19,6 +23,11 @@ type UpdateUserReq struct {
 	ID int `params:"id"`
 	UpdateCurUserReq
 }
+
+type GetUserTeamsByIDReq struct {
+	UID int `params:"id"`
+}
+
 type UpdateUserInfoResp struct{}
 
 func (h *Handler) GetCurrentUser(c *fiber.Ctx, req GetUserReq) (*dto.UserInfo, error) {
@@ -33,6 +42,15 @@ func (h *Handler) GetCurrentUser(c *fiber.Ctx, req GetUserReq) (*dto.UserInfo, e
 
 	userInfo := service.GetInfoFromUser(user)
 	return userInfo, err
+}
+
+func (h *Handler) GetUserByID(c *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicInfo, error) {
+	user, err := h.service.FindUserByID(context.Background(), req.ID)
+	if err != nil {
+		return nil, err
+	}
+	info := service.GetBasicInfoFromUser(user)
+	return info, err
 }
 
 func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*UpdateUserInfoResp, error) {
@@ -57,4 +75,16 @@ func (h *Handler) UpdateUser(c *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoRe
 		},
 	)
 	return nil, err
+}
+
+func (h *Handler) GetUserTeamsByID(ctx *fiber.Ctx, req GetUserTeamsByIDReq) ([]*dto.TeamInfo, error) {
+	u, err := h.service.FindUserByID(context.Background(), req.UID)
+	if err != nil {
+		return nil, err
+	}
+	tInfo, err := h.service.GetTeamsOfUser(context.Background(), u)
+	if err != nil {
+		return nil, err
+	}
+	return tInfo, nil
 }

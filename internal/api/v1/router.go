@@ -52,6 +52,7 @@ func (r *Router) Setup() {
 
 	r.SetupAuth()
 	r.SetupUser()
+	r.SetupTeam()
 }
 
 func (r *Router) SetupAuth() {
@@ -61,10 +62,14 @@ func (r *Router) SetupAuth() {
 }
 
 func (r *Router) SetupUser() {
-	user := r.router.Group("user", jwtMiddleware)
-	user.Get("/", handler.WrapHandlerWithAutoParse(r.handler.GetCurrentUser))
-	user.Patch("/", handler.WrapHandlerWithAutoParse(r.handler.UpdateCurrentUser))
-	user.Patch(
+	userGrp := r.router.Group("user")
+	userGrp.Get("/:id", handler.WrapHandlerWithAutoParse(r.handler.GetUserByID))
+	userGrp.Get("/:id/teams", handler.WrapHandlerWithAutoParse(r.handler.GetUserTeamsByID))
+
+	userGrpWithAuth := r.router.Group("user", jwtMiddleware)
+	userGrpWithAuth.Get("/", handler.WrapHandlerWithAutoParse(r.handler.GetCurrentUser))
+	userGrpWithAuth.Patch("/", handler.WrapHandlerWithAutoParse(r.handler.UpdateCurrentUser))
+	userGrpWithAuth.Patch(
 		"/:id",
 		r.casbinMiddleware.RequiresRoles(
 			[]string{constants.RoleNameAdmin, constants.RoleNameSuperuser},
@@ -72,6 +77,10 @@ func (r *Router) SetupUser() {
 		),
 		handler.WrapHandlerWithAutoParse(r.handler.UpdateUser),
 	)
+}
+
+func (r *Router) SetupTeam() {
+	// teamGrp := r.router.Group("team")
 }
 
 func health(c *fiber.Ctx) error {

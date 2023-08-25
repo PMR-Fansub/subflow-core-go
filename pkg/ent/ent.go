@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"subflow-core-go/pkg/ent/role"
+	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"sync"
 
@@ -75,6 +76,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			role.Table: role.ValidColumn,
+			team.Table: team.ValidColumn,
 			user.Table: user.ValidColumn,
 		})
 	})

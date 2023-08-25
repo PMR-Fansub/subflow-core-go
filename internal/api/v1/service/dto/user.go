@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type CreateUserRequest struct {
 	Username   string `json:"username" validate:"required"`
