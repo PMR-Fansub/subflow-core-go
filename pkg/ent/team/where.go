@@ -409,21 +409,44 @@ func DescContainsFold(v string) predicate.Team {
 	return predicate.Team(sql.FieldContainsFold(FieldDesc, v))
 }
 
-// HasMembers applies the HasEdge predicate on the "members" edge.
-func HasMembers() predicate.Team {
+// HasUsers applies the HasEdge predicate on the "users" edge.
+func HasUsers() predicate.Team {
 	return predicate.Team(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, MembersTable, MembersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, UsersTable, UsersPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasMembersWith applies the HasEdge predicate on the "members" edge with a given conditions (other predicates).
-func HasMembersWith(preds ...predicate.User) predicate.Team {
+// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
+func HasUsersWith(preds ...predicate.User) predicate.Team {
 	return predicate.Team(func(s *sql.Selector) {
-		step := newMembersStep()
+		step := newUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTasks applies the HasEdge predicate on the "tasks" edge.
+func HasTasks() predicate.Team {
+	return predicate.Team(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TasksTable, TasksColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTasksWith applies the HasEdge predicate on the "tasks" edge with a given conditions (other predicates).
+func HasTasksWith(preds ...predicate.Task) predicate.Team {
+	return predicate.Team(func(s *sql.Selector) {
+		step := newTasksStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

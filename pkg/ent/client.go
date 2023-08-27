@@ -11,8 +11,12 @@ import (
 	"subflow-core-go/pkg/ent/migrate"
 
 	"subflow-core-go/pkg/ent/role"
+	"subflow-core-go/pkg/ent/task"
+	"subflow-core-go/pkg/ent/taskrecord"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
+	"subflow-core-go/pkg/ent/workflow"
+	"subflow-core-go/pkg/ent/workflownode"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -27,10 +31,18 @@ type Client struct {
 	Schema *migrate.Schema
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// Task is the client for interacting with the Task builders.
+	Task *TaskClient
+	// TaskRecord is the client for interacting with the TaskRecord builders.
+	TaskRecord *TaskRecordClient
 	// Team is the client for interacting with the Team builders.
 	Team *TeamClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Workflow is the client for interacting with the Workflow builders.
+	Workflow *WorkflowClient
+	// WorkflowNode is the client for interacting with the WorkflowNode builders.
+	WorkflowNode *WorkflowNodeClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -45,8 +57,12 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Role = NewRoleClient(c.config)
+	c.Task = NewTaskClient(c.config)
+	c.TaskRecord = NewTaskRecordClient(c.config)
 	c.Team = NewTeamClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.Workflow = NewWorkflowClient(c.config)
+	c.WorkflowNode = NewWorkflowNodeClient(c.config)
 }
 
 type (
@@ -127,11 +143,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Role:   NewRoleClient(cfg),
-		Team:   NewTeamClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Role:         NewRoleClient(cfg),
+		Task:         NewTaskClient(cfg),
+		TaskRecord:   NewTaskRecordClient(cfg),
+		Team:         NewTeamClient(cfg),
+		User:         NewUserClient(cfg),
+		Workflow:     NewWorkflowClient(cfg),
+		WorkflowNode: NewWorkflowNodeClient(cfg),
 	}, nil
 }
 
@@ -149,11 +169,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Role:   NewRoleClient(cfg),
-		Team:   NewTeamClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Role:         NewRoleClient(cfg),
+		Task:         NewTaskClient(cfg),
+		TaskRecord:   NewTaskRecordClient(cfg),
+		Team:         NewTeamClient(cfg),
+		User:         NewUserClient(cfg),
+		Workflow:     NewWorkflowClient(cfg),
+		WorkflowNode: NewWorkflowNodeClient(cfg),
 	}, nil
 }
 
@@ -182,17 +206,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Role.Use(hooks...)
-	c.Team.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Role, c.Task, c.TaskRecord, c.Team, c.User, c.Workflow, c.WorkflowNode,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Role.Intercept(interceptors...)
-	c.Team.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Role, c.Task, c.TaskRecord, c.Team, c.User, c.Workflow, c.WorkflowNode,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -200,10 +228,18 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
+	case *TaskMutation:
+		return c.Task.mutate(ctx, m)
+	case *TaskRecordMutation:
+		return c.TaskRecord.mutate(ctx, m)
 	case *TeamMutation:
 		return c.Team.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *WorkflowMutation:
+		return c.Workflow.mutate(ctx, m)
+	case *WorkflowNodeMutation:
+		return c.WorkflowNode.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -343,6 +379,338 @@ func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error)
 	}
 }
 
+// TaskClient is a client for the Task schema.
+type TaskClient struct {
+	config
+}
+
+// NewTaskClient returns a client for the Task from the given config.
+func NewTaskClient(c config) *TaskClient {
+	return &TaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `task.Hooks(f(g(h())))`.
+func (c *TaskClient) Use(hooks ...Hook) {
+	c.hooks.Task = append(c.hooks.Task, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `task.Intercept(f(g(h())))`.
+func (c *TaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Task = append(c.inters.Task, interceptors...)
+}
+
+// Create returns a builder for creating a Task entity.
+func (c *TaskClient) Create() *TaskCreate {
+	mutation := newTaskMutation(c.config, OpCreate)
+	return &TaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Task entities.
+func (c *TaskClient) CreateBulk(builders ...*TaskCreate) *TaskCreateBulk {
+	return &TaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Task.
+func (c *TaskClient) Update() *TaskUpdate {
+	mutation := newTaskMutation(c.config, OpUpdate)
+	return &TaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TaskClient) UpdateOne(t *Task) *TaskUpdateOne {
+	mutation := newTaskMutation(c.config, OpUpdateOne, withTask(t))
+	return &TaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TaskClient) UpdateOneID(id int) *TaskUpdateOne {
+	mutation := newTaskMutation(c.config, OpUpdateOne, withTaskID(id))
+	return &TaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Task.
+func (c *TaskClient) Delete() *TaskDelete {
+	mutation := newTaskMutation(c.config, OpDelete)
+	return &TaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TaskClient) DeleteOne(t *Task) *TaskDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TaskClient) DeleteOneID(id int) *TaskDeleteOne {
+	builder := c.Delete().Where(task.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TaskDeleteOne{builder}
+}
+
+// Query returns a query builder for Task.
+func (c *TaskClient) Query() *TaskQuery {
+	return &TaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Task entity by its id.
+func (c *TaskClient) Get(ctx context.Context, id int) (*Task, error) {
+	return c.Query().Where(task.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TaskClient) GetX(ctx context.Context, id int) *Task {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTaskRecords queries the task_records edge of a Task.
+func (c *TaskClient) QueryTaskRecords(t *Task) *TaskRecordQuery {
+	query := (&TaskRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(taskrecord.Table, taskrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, task.TaskRecordsTable, task.TaskRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflow queries the workflow edge of a Task.
+func (c *TaskClient) QueryWorkflow(t *Task) *WorkflowQuery {
+	query := (&WorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, task.WorkflowTable, task.WorkflowColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTeam queries the team edge of a Task.
+func (c *TaskClient) QueryTeam(t *Task) *TeamQuery {
+	query := (&TeamClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(team.Table, team.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, task.TeamTable, task.TeamColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TaskClient) Hooks() []Hook {
+	return c.hooks.Task
+}
+
+// Interceptors returns the client interceptors.
+func (c *TaskClient) Interceptors() []Interceptor {
+	return c.inters.Task
+}
+
+func (c *TaskClient) mutate(ctx context.Context, m *TaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Task mutation op: %q", m.Op())
+	}
+}
+
+// TaskRecordClient is a client for the TaskRecord schema.
+type TaskRecordClient struct {
+	config
+}
+
+// NewTaskRecordClient returns a client for the TaskRecord from the given config.
+func NewTaskRecordClient(c config) *TaskRecordClient {
+	return &TaskRecordClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `taskrecord.Hooks(f(g(h())))`.
+func (c *TaskRecordClient) Use(hooks ...Hook) {
+	c.hooks.TaskRecord = append(c.hooks.TaskRecord, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `taskrecord.Intercept(f(g(h())))`.
+func (c *TaskRecordClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TaskRecord = append(c.inters.TaskRecord, interceptors...)
+}
+
+// Create returns a builder for creating a TaskRecord entity.
+func (c *TaskRecordClient) Create() *TaskRecordCreate {
+	mutation := newTaskRecordMutation(c.config, OpCreate)
+	return &TaskRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TaskRecord entities.
+func (c *TaskRecordClient) CreateBulk(builders ...*TaskRecordCreate) *TaskRecordCreateBulk {
+	return &TaskRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TaskRecord.
+func (c *TaskRecordClient) Update() *TaskRecordUpdate {
+	mutation := newTaskRecordMutation(c.config, OpUpdate)
+	return &TaskRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TaskRecordClient) UpdateOne(tr *TaskRecord) *TaskRecordUpdateOne {
+	mutation := newTaskRecordMutation(c.config, OpUpdateOne, withTaskRecord(tr))
+	return &TaskRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TaskRecordClient) UpdateOneID(id int) *TaskRecordUpdateOne {
+	mutation := newTaskRecordMutation(c.config, OpUpdateOne, withTaskRecordID(id))
+	return &TaskRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TaskRecord.
+func (c *TaskRecordClient) Delete() *TaskRecordDelete {
+	mutation := newTaskRecordMutation(c.config, OpDelete)
+	return &TaskRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TaskRecordClient) DeleteOne(tr *TaskRecord) *TaskRecordDeleteOne {
+	return c.DeleteOneID(tr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TaskRecordClient) DeleteOneID(id int) *TaskRecordDeleteOne {
+	builder := c.Delete().Where(taskrecord.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TaskRecordDeleteOne{builder}
+}
+
+// Query returns a query builder for TaskRecord.
+func (c *TaskRecordClient) Query() *TaskRecordQuery {
+	return &TaskRecordQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTaskRecord},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TaskRecord entity by its id.
+func (c *TaskRecordClient) Get(ctx context.Context, id int) (*TaskRecord, error) {
+	return c.Query().Where(taskrecord.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TaskRecordClient) GetX(ctx context.Context, id int) *TaskRecord {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a TaskRecord.
+func (c *TaskRecordClient) QueryUser(tr *TaskRecord) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(taskrecord.Table, taskrecord.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, taskrecord.UserTable, taskrecord.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(tr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTask queries the task edge of a TaskRecord.
+func (c *TaskRecordClient) QueryTask(tr *TaskRecord) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(taskrecord.Table, taskrecord.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, taskrecord.TaskTable, taskrecord.TaskColumn),
+		)
+		fromV = sqlgraph.Neighbors(tr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflowNode queries the workflow_node edge of a TaskRecord.
+func (c *TaskRecordClient) QueryWorkflowNode(tr *TaskRecord) *WorkflowNodeQuery {
+	query := (&WorkflowNodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(taskrecord.Table, taskrecord.FieldID, id),
+			sqlgraph.To(workflownode.Table, workflownode.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, taskrecord.WorkflowNodeTable, taskrecord.WorkflowNodeColumn),
+		)
+		fromV = sqlgraph.Neighbors(tr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TaskRecordClient) Hooks() []Hook {
+	return c.hooks.TaskRecord
+}
+
+// Interceptors returns the client interceptors.
+func (c *TaskRecordClient) Interceptors() []Interceptor {
+	return c.inters.TaskRecord
+}
+
+func (c *TaskRecordClient) mutate(ctx context.Context, m *TaskRecordMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TaskRecordCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TaskRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TaskRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TaskRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TaskRecord mutation op: %q", m.Op())
+	}
+}
+
 // TeamClient is a client for the Team schema.
 type TeamClient struct {
 	config
@@ -436,15 +804,31 @@ func (c *TeamClient) GetX(ctx context.Context, id int) *Team {
 	return obj
 }
 
-// QueryMembers queries the members edge of a Team.
-func (c *TeamClient) QueryMembers(t *Team) *UserQuery {
+// QueryUsers queries the users edge of a Team.
+func (c *TeamClient) QueryUsers(t *Team) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(team.Table, team.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, team.MembersTable, team.MembersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, team.UsersTable, team.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTasks queries the tasks edge of a Team.
+func (c *TeamClient) QueryTasks(t *Team) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(team.Table, team.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, team.TasksTable, team.TasksColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -586,6 +970,22 @@ func (c *UserClient) QueryRoles(u *User) *RoleQuery {
 	return query
 }
 
+// QueryTaskRecords queries the task_records edge of a User.
+func (c *UserClient) QueryTaskRecords(u *User) *TaskRecordQuery {
+	query := (&TaskRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(taskrecord.Table, taskrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TaskRecordsTable, user.TaskRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryTeams queries the teams edge of a User.
 func (c *UserClient) QueryTeams(u *User) *TeamQuery {
 	query := (&TeamClient{config: c.config}).Query()
@@ -627,12 +1027,312 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// WorkflowClient is a client for the Workflow schema.
+type WorkflowClient struct {
+	config
+}
+
+// NewWorkflowClient returns a client for the Workflow from the given config.
+func NewWorkflowClient(c config) *WorkflowClient {
+	return &WorkflowClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflow.Hooks(f(g(h())))`.
+func (c *WorkflowClient) Use(hooks ...Hook) {
+	c.hooks.Workflow = append(c.hooks.Workflow, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflow.Intercept(f(g(h())))`.
+func (c *WorkflowClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Workflow = append(c.inters.Workflow, interceptors...)
+}
+
+// Create returns a builder for creating a Workflow entity.
+func (c *WorkflowClient) Create() *WorkflowCreate {
+	mutation := newWorkflowMutation(c.config, OpCreate)
+	return &WorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Workflow entities.
+func (c *WorkflowClient) CreateBulk(builders ...*WorkflowCreate) *WorkflowCreateBulk {
+	return &WorkflowCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Workflow.
+func (c *WorkflowClient) Update() *WorkflowUpdate {
+	mutation := newWorkflowMutation(c.config, OpUpdate)
+	return &WorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowClient) UpdateOne(w *Workflow) *WorkflowUpdateOne {
+	mutation := newWorkflowMutation(c.config, OpUpdateOne, withWorkflow(w))
+	return &WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowClient) UpdateOneID(id int) *WorkflowUpdateOne {
+	mutation := newWorkflowMutation(c.config, OpUpdateOne, withWorkflowID(id))
+	return &WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Workflow.
+func (c *WorkflowClient) Delete() *WorkflowDelete {
+	mutation := newWorkflowMutation(c.config, OpDelete)
+	return &WorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowClient) DeleteOne(w *Workflow) *WorkflowDeleteOne {
+	return c.DeleteOneID(w.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowClient) DeleteOneID(id int) *WorkflowDeleteOne {
+	builder := c.Delete().Where(workflow.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowDeleteOne{builder}
+}
+
+// Query returns a query builder for Workflow.
+func (c *WorkflowClient) Query() *WorkflowQuery {
+	return &WorkflowQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflow},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Workflow entity by its id.
+func (c *WorkflowClient) Get(ctx context.Context, id int) (*Workflow, error) {
+	return c.Query().Where(workflow.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowClient) GetX(ctx context.Context, id int) *Workflow {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryWorkflowNodes queries the workflow_nodes edge of a Workflow.
+func (c *WorkflowClient) QueryWorkflowNodes(w *Workflow) *WorkflowNodeQuery {
+	query := (&WorkflowNodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, id),
+			sqlgraph.To(workflownode.Table, workflownode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflow.WorkflowNodesTable, workflow.WorkflowNodesColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTasks queries the tasks edge of a Workflow.
+func (c *WorkflowClient) QueryTasks(w *Workflow) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflow.TasksTable, workflow.TasksColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowClient) Hooks() []Hook {
+	return c.hooks.Workflow
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowClient) Interceptors() []Interceptor {
+	return c.inters.Workflow
+}
+
+func (c *WorkflowClient) mutate(ctx context.Context, m *WorkflowMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Workflow mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowNodeClient is a client for the WorkflowNode schema.
+type WorkflowNodeClient struct {
+	config
+}
+
+// NewWorkflowNodeClient returns a client for the WorkflowNode from the given config.
+func NewWorkflowNodeClient(c config) *WorkflowNodeClient {
+	return &WorkflowNodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflownode.Hooks(f(g(h())))`.
+func (c *WorkflowNodeClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowNode = append(c.hooks.WorkflowNode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflownode.Intercept(f(g(h())))`.
+func (c *WorkflowNodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowNode = append(c.inters.WorkflowNode, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowNode entity.
+func (c *WorkflowNodeClient) Create() *WorkflowNodeCreate {
+	mutation := newWorkflowNodeMutation(c.config, OpCreate)
+	return &WorkflowNodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowNode entities.
+func (c *WorkflowNodeClient) CreateBulk(builders ...*WorkflowNodeCreate) *WorkflowNodeCreateBulk {
+	return &WorkflowNodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowNode.
+func (c *WorkflowNodeClient) Update() *WorkflowNodeUpdate {
+	mutation := newWorkflowNodeMutation(c.config, OpUpdate)
+	return &WorkflowNodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowNodeClient) UpdateOne(wn *WorkflowNode) *WorkflowNodeUpdateOne {
+	mutation := newWorkflowNodeMutation(c.config, OpUpdateOne, withWorkflowNode(wn))
+	return &WorkflowNodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowNodeClient) UpdateOneID(id int) *WorkflowNodeUpdateOne {
+	mutation := newWorkflowNodeMutation(c.config, OpUpdateOne, withWorkflowNodeID(id))
+	return &WorkflowNodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowNode.
+func (c *WorkflowNodeClient) Delete() *WorkflowNodeDelete {
+	mutation := newWorkflowNodeMutation(c.config, OpDelete)
+	return &WorkflowNodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowNodeClient) DeleteOne(wn *WorkflowNode) *WorkflowNodeDeleteOne {
+	return c.DeleteOneID(wn.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowNodeClient) DeleteOneID(id int) *WorkflowNodeDeleteOne {
+	builder := c.Delete().Where(workflownode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowNodeDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowNode.
+func (c *WorkflowNodeClient) Query() *WorkflowNodeQuery {
+	return &WorkflowNodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowNode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowNode entity by its id.
+func (c *WorkflowNodeClient) Get(ctx context.Context, id int) (*WorkflowNode, error) {
+	return c.Query().Where(workflownode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowNodeClient) GetX(ctx context.Context, id int) *WorkflowNode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTaskRecords queries the task_records edge of a WorkflowNode.
+func (c *WorkflowNodeClient) QueryTaskRecords(wn *WorkflowNode) *TaskRecordQuery {
+	query := (&TaskRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wn.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflownode.Table, workflownode.FieldID, id),
+			sqlgraph.To(taskrecord.Table, taskrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflownode.TaskRecordsTable, workflownode.TaskRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(wn.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflow queries the workflow edge of a WorkflowNode.
+func (c *WorkflowNodeClient) QueryWorkflow(wn *WorkflowNode) *WorkflowQuery {
+	query := (&WorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wn.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflownode.Table, workflownode.FieldID, id),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflownode.WorkflowTable, workflownode.WorkflowColumn),
+		)
+		fromV = sqlgraph.Neighbors(wn.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowNodeClient) Hooks() []Hook {
+	return c.hooks.WorkflowNode
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowNodeClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowNode
+}
+
+func (c *WorkflowNodeClient) mutate(ctx context.Context, m *WorkflowNodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowNodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowNodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowNodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowNodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown WorkflowNode mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Role, Team, User []ent.Hook
+		Role, Task, TaskRecord, Team, User, Workflow, WorkflowNode []ent.Hook
 	}
 	inters struct {
-		Role, Team, User []ent.Interceptor
+		Role, Task, TaskRecord, Team, User, Workflow, WorkflowNode []ent.Interceptor
 	}
 )

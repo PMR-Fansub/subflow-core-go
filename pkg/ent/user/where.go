@@ -743,6 +743,29 @@ func HasRolesWith(preds ...predicate.Role) predicate.User {
 	})
 }
 
+// HasTaskRecords applies the HasEdge predicate on the "task_records" edge.
+func HasTaskRecords() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TaskRecordsTable, TaskRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaskRecordsWith applies the HasEdge predicate on the "task_records" edge with a given conditions (other predicates).
+func HasTaskRecordsWith(preds ...predicate.TaskRecord) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTaskRecordsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasTeams applies the HasEdge predicate on the "teams" edge.
 func HasTeams() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

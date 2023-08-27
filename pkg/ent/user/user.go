@@ -36,6 +36,8 @@ const (
 	FieldAvatar = "avatar"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
+	// EdgeTaskRecords holds the string denoting the task_records edge name in mutations.
+	EdgeTaskRecords = "task_records"
 	// EdgeTeams holds the string denoting the teams edge name in mutations.
 	EdgeTeams = "teams"
 	// Table holds the table name of the user in the database.
@@ -45,8 +47,15 @@ const (
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
+	// TaskRecordsTable is the table that holds the task_records relation/edge.
+	TaskRecordsTable = "task_records"
+	// TaskRecordsInverseTable is the table name for the TaskRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "taskrecord" package.
+	TaskRecordsInverseTable = "task_records"
+	// TaskRecordsColumn is the table column denoting the task_records relation/edge.
+	TaskRecordsColumn = "user_task_records"
 	// TeamsTable is the table that holds the teams relation/edge. The primary key declared below.
-	TeamsTable = "team_members"
+	TeamsTable = "team_users"
 	// TeamsInverseTable is the table name for the Team entity.
 	// It exists in this package in order to avoid circular dependency with the "team" package.
 	TeamsInverseTable = "teams"
@@ -171,6 +180,20 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByTaskRecordsCount orders the results by task_records count.
+func ByTaskRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTaskRecordsStep(), opts...)
+	}
+}
+
+// ByTaskRecords orders the results by task_records terms.
+func ByTaskRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTaskRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByTeamsCount orders the results by teams count.
 func ByTeamsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -189,6 +212,13 @@ func newRolesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RolesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+	)
+}
+func newTaskRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TaskRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TaskRecordsTable, TaskRecordsColumn),
 	)
 }
 func newTeamsStep() *sqlgraph.Step {

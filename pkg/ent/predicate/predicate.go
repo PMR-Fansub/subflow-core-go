@@ -9,8 +9,20 @@ import (
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
 
+// Task is the predicate function for task builders.
+type Task func(*sql.Selector)
+
+// TaskRecord is the predicate function for taskrecord builders.
+type TaskRecord func(*sql.Selector)
+
 // Team is the predicate function for team builders.
 type Team func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// Workflow is the predicate function for workflow builders.
+type Workflow func(*sql.Selector)
+
+// WorkflowNode is the predicate function for workflownode builders.
+type WorkflowNode func(*sql.Selector)

@@ -33,7 +33,8 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("roles", Role.Type),
+		edge.To("task_records", TaskRecord.Type),
 		edge.From("teams", Team.Type).
-			Ref("members"),
+			Ref("users"),
 	}
 }

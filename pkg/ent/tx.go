@@ -14,10 +14,18 @@ type Tx struct {
 	config
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// Task is the client for interacting with the Task builders.
+	Task *TaskClient
+	// TaskRecord is the client for interacting with the TaskRecord builders.
+	TaskRecord *TaskRecordClient
 	// Team is the client for interacting with the Team builders.
 	Team *TeamClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Workflow is the client for interacting with the Workflow builders.
+	Workflow *WorkflowClient
+	// WorkflowNode is the client for interacting with the WorkflowNode builders.
+	WorkflowNode *WorkflowNodeClient
 
 	// lazily loaded.
 	client     *Client
@@ -150,8 +158,12 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Role = NewRoleClient(tx.config)
+	tx.Task = NewTaskClient(tx.config)
+	tx.TaskRecord = NewTaskRecordClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.Workflow = NewWorkflowClient(tx.config)
+	tx.WorkflowNode = NewWorkflowNodeClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"subflow-core-go/pkg/ent/role"
+	"subflow-core-go/pkg/ent/taskrecord"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"time"
@@ -145,6 +146,21 @@ func (uc *UserCreate) AddRoles(r ...*Role) *UserCreate {
 		ids[i] = r[i].ID
 	}
 	return uc.AddRoleIDs(ids...)
+}
+
+// AddTaskRecordIDs adds the "task_records" edge to the TaskRecord entity by IDs.
+func (uc *UserCreate) AddTaskRecordIDs(ids ...int) *UserCreate {
+	uc.mutation.AddTaskRecordIDs(ids...)
+	return uc
+}
+
+// AddTaskRecords adds the "task_records" edges to the TaskRecord entity.
+func (uc *UserCreate) AddTaskRecords(t ...*TaskRecord) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTaskRecordIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
@@ -318,6 +334,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TaskRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -47,11 +47,13 @@ type User struct {
 type UserEdges struct {
 	// Roles holds the value of the roles edge.
 	Roles []*Role `json:"roles,omitempty"`
+	// TaskRecords holds the value of the task_records edge.
+	TaskRecords []*TaskRecord `json:"task_records,omitempty"`
 	// Teams holds the value of the teams edge.
 	Teams []*Team `json:"teams,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // RolesOrErr returns the Roles value or an error if the edge
@@ -63,10 +65,19 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 	return nil, &NotLoadedError{edge: "roles"}
 }
 
+// TaskRecordsOrErr returns the TaskRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TaskRecordsOrErr() ([]*TaskRecord, error) {
+	if e.loadedTypes[1] {
+		return e.TaskRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "task_records"}
+}
+
 // TeamsOrErr returns the Teams value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TeamsOrErr() ([]*Team, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Teams, nil
 	}
 	return nil, &NotLoadedError{edge: "teams"}
@@ -180,6 +191,11 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryRoles queries the "roles" edge of the User entity.
 func (u *User) QueryRoles() *RoleQuery {
 	return NewUserClient(u.config).QueryRoles(u)
+}
+
+// QueryTaskRecords queries the "task_records" edge of the User entity.
+func (u *User) QueryTaskRecords() *TaskRecordQuery {
+	return NewUserClient(u.config).QueryTaskRecords(u)
 }
 
 // QueryTeams queries the "teams" edge of the User entity.
