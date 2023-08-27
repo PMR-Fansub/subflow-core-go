@@ -34,20 +34,31 @@ type Team struct {
 
 // TeamEdges holds the relations/edges for other nodes in the graph.
 type TeamEdges struct {
-	// Members holds the value of the members edge.
-	Members []*User `json:"members,omitempty"`
+	// Users holds the value of the users edge.
+	Users []*User `json:"users,omitempty"`
+	// Tasks holds the value of the tasks edge.
+	Tasks []*Task `json:"tasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
-// MembersOrErr returns the Members value or an error if the edge
+// UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
-func (e TeamEdges) MembersOrErr() ([]*User, error) {
+func (e TeamEdges) UsersOrErr() ([]*User, error) {
 	if e.loadedTypes[0] {
-		return e.Members, nil
+		return e.Users, nil
 	}
-	return nil, &NotLoadedError{edge: "members"}
+	return nil, &NotLoadedError{edge: "users"}
+}
+
+// TasksOrErr returns the Tasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e TeamEdges) TasksOrErr() ([]*Task, error) {
+	if e.loadedTypes[1] {
+		return e.Tasks, nil
+	}
+	return nil, &NotLoadedError{edge: "tasks"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -123,9 +134,14 @@ func (t *Team) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
 }
 
-// QueryMembers queries the "members" edge of the Team entity.
-func (t *Team) QueryMembers() *UserQuery {
-	return NewTeamClient(t.config).QueryMembers(t)
+// QueryUsers queries the "users" edge of the Team entity.
+func (t *Team) QueryUsers() *UserQuery {
+	return NewTeamClient(t.config).QueryUsers(t)
+}
+
+// QueryTasks queries the "tasks" edge of the Team entity.
+func (t *Team) QueryTasks() *TaskQuery {
+	return NewTeamClient(t.config).QueryTasks(t)
 }
 
 // Update returns a builder for updating this Team.

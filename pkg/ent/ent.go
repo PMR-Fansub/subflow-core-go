@@ -8,8 +8,12 @@ import (
 	"fmt"
 	"reflect"
 	"subflow-core-go/pkg/ent/role"
+	"subflow-core-go/pkg/ent/task"
+	"subflow-core-go/pkg/ent/taskrecord"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
+	"subflow-core-go/pkg/ent/workflow"
+	"subflow-core-go/pkg/ent/workflownode"
 	"sync"
 
 	"entgo.io/ent"
@@ -75,9 +79,13 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			role.Table: role.ValidColumn,
-			team.Table: team.ValidColumn,
-			user.Table: user.ValidColumn,
+			role.Table:         role.ValidColumn,
+			task.Table:         task.ValidColumn,
+			taskrecord.Table:   taskrecord.ValidColumn,
+			team.Table:         team.ValidColumn,
+			user.Table:         user.ValidColumn,
+			workflow.Table:     workflow.ValidColumn,
+			workflownode.Table: workflownode.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

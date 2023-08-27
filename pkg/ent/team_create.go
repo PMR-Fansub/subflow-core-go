@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 
@@ -76,19 +77,34 @@ func (tc *TeamCreate) SetNillableDesc(s *string) *TeamCreate {
 	return tc
 }
 
-// AddMemberIDs adds the "members" edge to the User entity by IDs.
-func (tc *TeamCreate) AddMemberIDs(ids ...int) *TeamCreate {
-	tc.mutation.AddMemberIDs(ids...)
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (tc *TeamCreate) AddUserIDs(ids ...int) *TeamCreate {
+	tc.mutation.AddUserIDs(ids...)
 	return tc
 }
 
-// AddMembers adds the "members" edges to the User entity.
-func (tc *TeamCreate) AddMembers(u ...*User) *TeamCreate {
+// AddUsers adds the "users" edges to the User entity.
+func (tc *TeamCreate) AddUsers(u ...*User) *TeamCreate {
 	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
-	return tc.AddMemberIDs(ids...)
+	return tc.AddUserIDs(ids...)
+}
+
+// AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
+func (tc *TeamCreate) AddTaskIDs(ids ...int) *TeamCreate {
+	tc.mutation.AddTaskIDs(ids...)
+	return tc
+}
+
+// AddTasks adds the "tasks" edges to the Task entity.
+func (tc *TeamCreate) AddTasks(t ...*Task) *TeamCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTaskIDs(ids...)
 }
 
 // Mutation returns the TeamMutation object of the builder.
@@ -183,15 +199,31 @@ func (tc *TeamCreate) createSpec() (*Team, *sqlgraph.CreateSpec) {
 		_spec.SetField(team.FieldDesc, field.TypeString, value)
 		_node.Desc = value
 	}
-	if nodes := tc.mutation.MembersIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   team.MembersTable,
-			Columns: team.MembersPrimaryKey,
+			Table:   team.UsersTable,
+			Columns: team.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.TasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   team.TasksTable,
+			Columns: []string{team.TasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

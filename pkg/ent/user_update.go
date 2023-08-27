@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"subflow-core-go/pkg/ent/predicate"
 	"subflow-core-go/pkg/ent/role"
+	"subflow-core-go/pkg/ent/taskrecord"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"time"
@@ -184,6 +185,21 @@ func (uu *UserUpdate) AddRoles(r ...*Role) *UserUpdate {
 	return uu.AddRoleIDs(ids...)
 }
 
+// AddTaskRecordIDs adds the "task_records" edge to the TaskRecord entity by IDs.
+func (uu *UserUpdate) AddTaskRecordIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddTaskRecordIDs(ids...)
+	return uu
+}
+
+// AddTaskRecords adds the "task_records" edges to the TaskRecord entity.
+func (uu *UserUpdate) AddTaskRecords(t ...*TaskRecord) *UserUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uu.AddTaskRecordIDs(ids...)
+}
+
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
 func (uu *UserUpdate) AddTeamIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddTeamIDs(ids...)
@@ -223,6 +239,27 @@ func (uu *UserUpdate) RemoveRoles(r ...*Role) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.RemoveRoleIDs(ids...)
+}
+
+// ClearTaskRecords clears all "task_records" edges to the TaskRecord entity.
+func (uu *UserUpdate) ClearTaskRecords() *UserUpdate {
+	uu.mutation.ClearTaskRecords()
+	return uu
+}
+
+// RemoveTaskRecordIDs removes the "task_records" edge to TaskRecord entities by IDs.
+func (uu *UserUpdate) RemoveTaskRecordIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveTaskRecordIDs(ids...)
+	return uu
+}
+
+// RemoveTaskRecords removes "task_records" edges to TaskRecord entities.
+func (uu *UserUpdate) RemoveTaskRecords(t ...*TaskRecord) *UserUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uu.RemoveTaskRecordIDs(ids...)
 }
 
 // ClearTeams clears all "teams" edges to the Team entity.
@@ -388,6 +425,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.TaskRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedTaskRecordsIDs(); len(nodes) > 0 && !uu.mutation.TaskRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TaskRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -614,6 +696,21 @@ func (uuo *UserUpdateOne) AddRoles(r ...*Role) *UserUpdateOne {
 	return uuo.AddRoleIDs(ids...)
 }
 
+// AddTaskRecordIDs adds the "task_records" edge to the TaskRecord entity by IDs.
+func (uuo *UserUpdateOne) AddTaskRecordIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddTaskRecordIDs(ids...)
+	return uuo
+}
+
+// AddTaskRecords adds the "task_records" edges to the TaskRecord entity.
+func (uuo *UserUpdateOne) AddTaskRecords(t ...*TaskRecord) *UserUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uuo.AddTaskRecordIDs(ids...)
+}
+
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
 func (uuo *UserUpdateOne) AddTeamIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddTeamIDs(ids...)
@@ -653,6 +750,27 @@ func (uuo *UserUpdateOne) RemoveRoles(r ...*Role) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.RemoveRoleIDs(ids...)
+}
+
+// ClearTaskRecords clears all "task_records" edges to the TaskRecord entity.
+func (uuo *UserUpdateOne) ClearTaskRecords() *UserUpdateOne {
+	uuo.mutation.ClearTaskRecords()
+	return uuo
+}
+
+// RemoveTaskRecordIDs removes the "task_records" edge to TaskRecord entities by IDs.
+func (uuo *UserUpdateOne) RemoveTaskRecordIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveTaskRecordIDs(ids...)
+	return uuo
+}
+
+// RemoveTaskRecords removes "task_records" edges to TaskRecord entities.
+func (uuo *UserUpdateOne) RemoveTaskRecords(t ...*TaskRecord) *UserUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uuo.RemoveTaskRecordIDs(ids...)
 }
 
 // ClearTeams clears all "teams" edges to the Team entity.
@@ -848,6 +966,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.TaskRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedTaskRecordsIDs(); len(nodes) > 0 && !uuo.mutation.TaskRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TaskRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TaskRecordsTable,
+			Columns: []string{user.TaskRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

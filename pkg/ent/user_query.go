@@ -9,6 +9,7 @@ import (
 	"math"
 	"subflow-core-go/pkg/ent/predicate"
 	"subflow-core-go/pkg/ent/role"
+	"subflow-core-go/pkg/ent/taskrecord"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 
@@ -20,12 +21,13 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx        *QueryContext
-	order      []user.OrderOption
-	inters     []Interceptor
-	predicates []predicate.User
-	withRoles  *RoleQuery
-	withTeams  *TeamQuery
+	ctx             *QueryContext
+	order           []user.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.User
+	withRoles       *RoleQuery
+	withTaskRecords *TaskRecordQuery
+	withTeams       *TeamQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +79,28 @@ func (uq *UserQuery) QueryRoles() *RoleQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, user.RolesTable, user.RolesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTaskRecords chains the current query on the "task_records" edge.
+func (uq *UserQuery) QueryTaskRecords() *TaskRecordQuery {
+	query := (&TaskRecordClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(taskrecord.Table, taskrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TaskRecordsTable, user.TaskRecordsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,13 +317,14 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:     uq.config,
-		ctx:        uq.ctx.Clone(),
-		order:      append([]user.OrderOption{}, uq.order...),
-		inters:     append([]Interceptor{}, uq.inters...),
-		predicates: append([]predicate.User{}, uq.predicates...),
-		withRoles:  uq.withRoles.Clone(),
-		withTeams:  uq.withTeams.Clone(),
+		config:          uq.config,
+		ctx:             uq.ctx.Clone(),
+		order:           append([]user.OrderOption{}, uq.order...),
+		inters:          append([]Interceptor{}, uq.inters...),
+		predicates:      append([]predicate.User{}, uq.predicates...),
+		withRoles:       uq.withRoles.Clone(),
+		withTaskRecords: uq.withTaskRecords.Clone(),
+		withTeams:       uq.withTeams.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -314,6 +339,17 @@ func (uq *UserQuery) WithRoles(opts ...func(*RoleQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withRoles = query
+	return uq
+}
+
+// WithTaskRecords tells the query-builder to eager-load the nodes that are connected to
+// the "task_records" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTaskRecords(opts ...func(*TaskRecordQuery)) *UserQuery {
+	query := (&TaskRecordClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTaskRecords = query
 	return uq
 }
 
@@ -406,8 +442,9 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			uq.withRoles != nil,
+			uq.withTaskRecords != nil,
 			uq.withTeams != nil,
 		}
 	)
@@ -433,6 +470,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadRoles(ctx, query, nodes,
 			func(n *User) { n.Edges.Roles = []*Role{} },
 			func(n *User, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withTaskRecords; query != nil {
+		if err := uq.loadTaskRecords(ctx, query, nodes,
+			func(n *User) { n.Edges.TaskRecords = []*TaskRecord{} },
+			func(n *User, e *TaskRecord) { n.Edges.TaskRecords = append(n.Edges.TaskRecords, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -504,6 +548,37 @@ func (uq *UserQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*U
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadTaskRecords(ctx context.Context, query *TaskRecordQuery, nodes []*User, init func(*User), assign func(*User, *TaskRecord)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.TaskRecord(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TaskRecordsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_task_records
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_task_records" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_task_records" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

@@ -20,6 +20,76 @@ var (
 		Columns:    RolesColumns,
 		PrimaryKey: []*schema.Column{RolesColumns[0]},
 	}
+	// TasksColumns holds the columns for the "tasks" table.
+	TasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeInt},
+		{Name: "desc", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "team_tasks", Type: field.TypeInt, Nullable: true},
+		{Name: "workflow_tasks", Type: field.TypeInt, Nullable: true},
+	}
+	// TasksTable holds the schema information for the "tasks" table.
+	TasksTable = &schema.Table{
+		Name:       "tasks",
+		Columns:    TasksColumns,
+		PrimaryKey: []*schema.Column{TasksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tasks_teams_tasks",
+				Columns:    []*schema.Column{TasksColumns[7]},
+				RefColumns: []*schema.Column{TeamsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tasks_workflows_tasks",
+				Columns:    []*schema.Column{TasksColumns[8]},
+				RefColumns: []*schema.Column{WorkflowsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TaskRecordsColumns holds the columns for the "task_records" table.
+	TaskRecordsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "status", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "assigned_at", Type: field.TypeTime, Nullable: true},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "remark", Type: field.TypeString, Nullable: true},
+		{Name: "task_task_records", Type: field.TypeInt, Nullable: true},
+		{Name: "user_task_records", Type: field.TypeInt, Nullable: true},
+		{Name: "workflow_node_task_records", Type: field.TypeInt, Nullable: true},
+	}
+	// TaskRecordsTable holds the schema information for the "task_records" table.
+	TaskRecordsTable = &schema.Table{
+		Name:       "task_records",
+		Columns:    TaskRecordsColumns,
+		PrimaryKey: []*schema.Column{TaskRecordsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "task_records_tasks_task_records",
+				Columns:    []*schema.Column{TaskRecordsColumns[6]},
+				RefColumns: []*schema.Column{TasksColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "task_records_users_task_records",
+				Columns:    []*schema.Column{TaskRecordsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "task_records_workflow_nodes_task_records",
+				Columns:    []*schema.Column{TaskRecordsColumns[8]},
+				RefColumns: []*schema.Column{WorkflowNodesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// TeamsColumns holds the columns for the "teams" table.
 	TeamsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -55,26 +125,62 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
-	// TeamMembersColumns holds the columns for the "team_members" table.
-	TeamMembersColumns = []*schema.Column{
+	// WorkflowsColumns holds the columns for the "workflows" table.
+	WorkflowsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeInt},
+		{Name: "desc", Type: field.TypeString, Nullable: true},
+	}
+	// WorkflowsTable holds the schema information for the "workflows" table.
+	WorkflowsTable = &schema.Table{
+		Name:       "workflows",
+		Columns:    WorkflowsColumns,
+		PrimaryKey: []*schema.Column{WorkflowsColumns[0]},
+	}
+	// WorkflowNodesColumns holds the columns for the "workflow_nodes" table.
+	WorkflowNodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeInt},
+		{Name: "desc", Type: field.TypeString, Nullable: true},
+		{Name: "seq", Type: field.TypeInt, Nullable: true},
+		{Name: "workflow_workflow_nodes", Type: field.TypeInt, Nullable: true},
+	}
+	// WorkflowNodesTable holds the schema information for the "workflow_nodes" table.
+	WorkflowNodesTable = &schema.Table{
+		Name:       "workflow_nodes",
+		Columns:    WorkflowNodesColumns,
+		PrimaryKey: []*schema.Column{WorkflowNodesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workflow_nodes_workflows_workflow_nodes",
+				Columns:    []*schema.Column{WorkflowNodesColumns[5]},
+				RefColumns: []*schema.Column{WorkflowsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TeamUsersColumns holds the columns for the "team_users" table.
+	TeamUsersColumns = []*schema.Column{
 		{Name: "team_id", Type: field.TypeInt},
 		{Name: "user_id", Type: field.TypeInt},
 	}
-	// TeamMembersTable holds the schema information for the "team_members" table.
-	TeamMembersTable = &schema.Table{
-		Name:       "team_members",
-		Columns:    TeamMembersColumns,
-		PrimaryKey: []*schema.Column{TeamMembersColumns[0], TeamMembersColumns[1]},
+	// TeamUsersTable holds the schema information for the "team_users" table.
+	TeamUsersTable = &schema.Table{
+		Name:       "team_users",
+		Columns:    TeamUsersColumns,
+		PrimaryKey: []*schema.Column{TeamUsersColumns[0], TeamUsersColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "team_members_team_id",
-				Columns:    []*schema.Column{TeamMembersColumns[0]},
+				Symbol:     "team_users_team_id",
+				Columns:    []*schema.Column{TeamUsersColumns[0]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "team_members_user_id",
-				Columns:    []*schema.Column{TeamMembersColumns[1]},
+				Symbol:     "team_users_user_id",
+				Columns:    []*schema.Column{TeamUsersColumns[1]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -108,16 +214,26 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		RolesTable,
+		TasksTable,
+		TaskRecordsTable,
 		TeamsTable,
 		UsersTable,
-		TeamMembersTable,
+		WorkflowsTable,
+		WorkflowNodesTable,
+		TeamUsersTable,
 		UserRolesTable,
 	}
 )
 
 func init() {
-	TeamMembersTable.ForeignKeys[0].RefTable = TeamsTable
-	TeamMembersTable.ForeignKeys[1].RefTable = UsersTable
+	TasksTable.ForeignKeys[0].RefTable = TeamsTable
+	TasksTable.ForeignKeys[1].RefTable = WorkflowsTable
+	TaskRecordsTable.ForeignKeys[0].RefTable = TasksTable
+	TaskRecordsTable.ForeignKeys[1].RefTable = UsersTable
+	TaskRecordsTable.ForeignKeys[2].RefTable = WorkflowNodesTable
+	WorkflowNodesTable.ForeignKeys[0].RefTable = WorkflowsTable
+	TeamUsersTable.ForeignKeys[0].RefTable = TeamsTable
+	TeamUsersTable.ForeignKeys[1].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
 }

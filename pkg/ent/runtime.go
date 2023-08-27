@@ -5,6 +5,8 @@ package ent
 import (
 	"subflow-core-go/pkg/ent/role"
 	"subflow-core-go/pkg/ent/schema"
+	"subflow-core-go/pkg/ent/task"
+	"subflow-core-go/pkg/ent/taskrecord"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"time"
@@ -20,6 +22,18 @@ func init() {
 	roleDescName := roleFields[1].Descriptor()
 	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	role.NameValidator = roleDescName.Validators[0].(func(string) error)
+	taskFields := schema.Task{}.Fields()
+	_ = taskFields
+	// taskDescCreatedAt is the schema descriptor for created_at field.
+	taskDescCreatedAt := taskFields[4].Descriptor()
+	// task.DefaultCreatedAt holds the default value on creation for the created_at field.
+	task.DefaultCreatedAt = taskDescCreatedAt.Default.(time.Time)
+	taskrecordFields := schema.TaskRecord{}.Fields()
+	_ = taskrecordFields
+	// taskrecordDescCreatedAt is the schema descriptor for created_at field.
+	taskrecordDescCreatedAt := taskrecordFields[1].Descriptor()
+	// taskrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	taskrecord.DefaultCreatedAt = taskrecordDescCreatedAt.Default.(time.Time)
 	teamFields := schema.Team{}.Fields()
 	_ = teamFields
 	// teamDescName is the schema descriptor for name field.

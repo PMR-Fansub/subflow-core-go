@@ -20,6 +20,30 @@ func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
 }
 
+// The TaskFunc type is an adapter to allow the use of ordinary
+// function as Task mutator.
+type TaskFunc func(context.Context, *ent.TaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TaskMutation", m)
+}
+
+// The TaskRecordFunc type is an adapter to allow the use of ordinary
+// function as TaskRecord mutator.
+type TaskRecordFunc func(context.Context, *ent.TaskRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TaskRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TaskRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TaskRecordMutation", m)
+}
+
 // The TeamFunc type is an adapter to allow the use of ordinary
 // function as Team mutator.
 type TeamFunc func(context.Context, *ent.TeamMutation) (ent.Value, error)
@@ -42,6 +66,30 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The WorkflowFunc type is an adapter to allow the use of ordinary
+// function as Workflow mutator.
+type WorkflowFunc func(context.Context, *ent.WorkflowMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorkflowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorkflowMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowMutation", m)
+}
+
+// The WorkflowNodeFunc type is an adapter to allow the use of ordinary
+// function as WorkflowNode mutator.
+type WorkflowNodeFunc func(context.Context, *ent.WorkflowNodeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorkflowNodeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorkflowNodeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowNodeMutation", m)
 }
 
 // Condition is a hook condition function.
