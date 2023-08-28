@@ -1,0 +1,304 @@
+basePath: /v1
+definitions:
+  common.APIResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+      timestamp:
+        type: integer
+    type: object
+  dto.TeamInfo:
+    properties:
+      QQGroup:
+        type: string
+      desc:
+        type: string
+      id:
+        type: integer
+      logo:
+        type: string
+      name:
+        type: string
+      status:
+        type: integer
+    type: object
+  dto.UserBasicInfo:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      nickname:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UserInfo:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      loginIP:
+        type: string
+      loginTime:
+        type: string
+      nickname:
+        type: string
+      registerIP:
+        type: string
+      registerTime:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+      withCookie:
+        default: false
+        type: boolean
+    required:
+    - password
+    - username
+    type: object
+  handler.LoginResponse:
+    properties:
+      token:
+        type: string
+      userInfo:
+        $ref: '#/definitions/dto.UserBasicInfo'
+    type: object
+  handler.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  handler.RegisterResponse:
+    type: object
+  handler.UpdateCurUserReq:
+    properties:
+      nickname:
+        type: string
+    type: object
+  handler.UpdateUserInfoResp:
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  license:
+    name: GPLv3
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+  title: SubFlow API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: login form
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.LoginResponse'
+              type: object
+      summary: User login
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user info to create
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RegisterResponse'
+              type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /user:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserInfo'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get current logged user info
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: user info to update
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateCurUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.UpdateUserInfoResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update current logged user info
+      tags:
+      - user
+  /user/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserBasicInfo'
+              type: object
+      summary: Get user basic info by UID
+      tags:
+      - user
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: user info to update
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateCurUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.UpdateUserInfoResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update user info by UID (admin)
+      tags:
+      - user
+  /user/{id}/teams:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TeamInfo'
+                  type: array
+              type: object
+      summary: Get all teams that the specified user belongs to
+      tags:
+      - user
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

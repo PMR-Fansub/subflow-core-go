@@ -16,8 +16,9 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Username   string `json:"username" validate:"required"`
+	Password   string `json:"password" validate:"required"`
+	WithCookie bool   `json:"withCookie" default:"false"`
 }
 
 type LoginResponse struct {
@@ -27,12 +28,30 @@ type LoginResponse struct {
 
 type RegisterResponse struct{}
 
+// Register godoc
+//
+//	@Summary	Register a new user
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		message	body		RegisterRequest	true	"user info to create"
+//	@Success	200		{object}	common.APIResponse{data=RegisterResponse}
+//	@Router		/auth/register [post]
 func (h *Handler) Register(c *fiber.Ctx, req RegisterRequest) (*RegisterResponse, error) {
 	req.RemoteAddr = c.IP()
 	_, err := h.service.CreateUser(context.Background(), req.CreateUserRequest)
 	return nil, err
 }
 
+// Login godoc
+//
+//	@Summary	User login
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		message	body		LoginRequest	true	"login form"
+//	@Success	200		{object}	common.APIResponse{data=LoginResponse}
+//	@Router		/auth/login [post]
 func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) {
 	var resp LoginResponse
 
@@ -62,14 +81,16 @@ func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) 
 	resp.Token = token
 	resp.UserInfo = service.GetBasicInfoFromUser(user)
 
-	c.Cookie(
-		&fiber.Cookie{
-			Name:     "auth_token",
-			Value:    token,
-			HTTPOnly: true,
-			Secure:   true,
-		},
-	)
+	if req.WithCookie {
+		c.Cookie(
+			&fiber.Cookie{
+				Name:     "auth_token",
+				Value:    token,
+				HTTPOnly: true,
+				Secure:   true,
+			},
+		)
+	}
 
 	return &resp, nil
 }
