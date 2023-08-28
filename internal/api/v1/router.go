@@ -8,11 +8,14 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	jwtware "github.com/gofiber/jwt/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 	"subflow-core-go/internal/api/common"
 	"subflow-core-go/internal/api/constants"
 	"subflow-core-go/internal/api/helper"
 	"subflow-core-go/internal/api/v1/handler"
 	"subflow-core-go/internal/config"
+
+	_ "subflow-core-go/docs"
 )
 
 type Router struct {

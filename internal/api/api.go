@@ -23,6 +23,18 @@ const (
 	writeTimeout = 10 * time.Second
 )
 
+//	@title		SubFlow API
+//	@version	1.0
+
+//	@license.name	GPLv3
+//	@license.url	https://www.gnu.org/licenses/gpl-3.0.html
+
+//	@host		localhost:8000
+//	@BasePath	/v1
+
+// @securityDefinitions.apiKey	ApiKeyAuth
+// @In							header
+// @Name						Authorization
 func New() *fiber.App {
 	return fiber.New(
 		fiber.Config{

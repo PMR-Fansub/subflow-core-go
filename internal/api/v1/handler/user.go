@@ -30,6 +30,15 @@ type GetUserTeamsByIDReq struct {
 
 type UpdateUserInfoResp struct{}
 
+// GetCurrentUser godoc
+//
+//	@Summary	Get current logged user info
+//	@Tags		user
+//	@Accept		json
+//	@Produce	json
+//	@Security	ApiKeyAuth
+//	@Success	200	{object}	common.APIResponse{data=dto.UserInfo}
+//	@Router		/user [get]
 func (h *Handler) GetCurrentUser(c *fiber.Ctx, req GetUserReq) (*dto.UserInfo, error) {
 	claim, err := helper.GetClaimFromFiberCtx(c)
 	if err != nil {
@@ -44,6 +53,15 @@ func (h *Handler) GetCurrentUser(c *fiber.Ctx, req GetUserReq) (*dto.UserInfo, e
 	return userInfo, err
 }
 
+// GetUserByID godoc
+//
+//	@Summary	Get user basic info by UID
+//	@Tags		user
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		int	true	"user id"
+//	@Success	200	{object}	common.APIResponse{data=dto.UserBasicInfo}
+//	@Router		/user/{id} [get]
 func (h *Handler) GetUserByID(c *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicInfo, error) {
 	user, err := h.service.FindUserByID(context.Background(), req.ID)
 	if err != nil {
@@ -53,6 +71,16 @@ func (h *Handler) GetUserByID(c *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicI
 	return info, err
 }
 
+// UpdateCurrentUser godoc
+//
+//	@Summary	Update current logged user info
+//	@Tags		user
+//	@Accept		json
+//	@Produce	json
+//	@Security	ApiKeyAuth
+//	@Param		message	body		UpdateCurUserReq	true	"user info to update"
+//	@Success	200		{object}	common.APIResponse{data=UpdateUserInfoResp}
+//	@Router		/user [patch]
 func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*UpdateUserInfoResp, error) {
 	claim, err := helper.GetClaimFromFiberCtx(c)
 	if err != nil {
@@ -67,6 +95,17 @@ func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*Update
 	return nil, err
 }
 
+// UpdateUser godoc
+//
+//	@Summary	Update user info by UID (admin)
+//	@Tags		user
+//	@Accept		json
+//	@Produce	json
+//	@Security	ApiKeyAuth
+//	@Param		id		path		int					true	"user id"
+//	@Param		message	body		UpdateCurUserReq	true	"user info to update"
+//	@Success	200		{object}	common.APIResponse{data=UpdateUserInfoResp}
+//	@Router		/user/{id} [patch]
 func (h *Handler) UpdateUser(c *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoResp, error) {
 	err := h.service.UpdateUser(
 		context.Background(), &dto.UpdateUserReq{
@@ -77,6 +116,15 @@ func (h *Handler) UpdateUser(c *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoRe
 	return nil, err
 }
 
+// GetUserTeamsByID godoc
+//
+//	@Summary	Get all teams that the specified user belongs to
+//	@Tags		user
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		int	true	"user id"
+//	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
+//	@Router		/user/{id}/teams [get]
 func (h *Handler) GetUserTeamsByID(ctx *fiber.Ctx, req GetUserTeamsByIDReq) ([]*dto.TeamInfo, error) {
 	u, err := h.service.FindUserByID(context.Background(), req.UID)
 	if err != nil {
