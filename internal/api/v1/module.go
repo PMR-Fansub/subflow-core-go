@@ -14,5 +14,6 @@ var Module = fx.Provide(
 	helper.NewAdapter,
 	middleware.NewCasbinEnforcer,
 	middleware.NewCasbinMiddleware,
+	middleware.NewJwtMiddleware,
 	NewRouter,
 )
