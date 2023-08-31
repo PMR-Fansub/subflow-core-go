@@ -13,6 +13,7 @@ import (
 	"subflow-core-go/pkg/ent/role"
 	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/taskrecord"
+	"subflow-core-go/pkg/ent/tasktag"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"subflow-core-go/pkg/ent/workflow"
@@ -35,6 +36,8 @@ type Client struct {
 	Task *TaskClient
 	// TaskRecord is the client for interacting with the TaskRecord builders.
 	TaskRecord *TaskRecordClient
+	// TaskTag is the client for interacting with the TaskTag builders.
+	TaskTag *TaskTagClient
 	// Team is the client for interacting with the Team builders.
 	Team *TeamClient
 	// User is the client for interacting with the User builders.
@@ -59,6 +62,7 @@ func (c *Client) init() {
 	c.Role = NewRoleClient(c.config)
 	c.Task = NewTaskClient(c.config)
 	c.TaskRecord = NewTaskRecordClient(c.config)
+	c.TaskTag = NewTaskTagClient(c.config)
 	c.Team = NewTeamClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Workflow = NewWorkflowClient(c.config)
@@ -148,6 +152,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Role:         NewRoleClient(cfg),
 		Task:         NewTaskClient(cfg),
 		TaskRecord:   NewTaskRecordClient(cfg),
+		TaskTag:      NewTaskTagClient(cfg),
 		Team:         NewTeamClient(cfg),
 		User:         NewUserClient(cfg),
 		Workflow:     NewWorkflowClient(cfg),
@@ -174,6 +179,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Role:         NewRoleClient(cfg),
 		Task:         NewTaskClient(cfg),
 		TaskRecord:   NewTaskRecordClient(cfg),
+		TaskTag:      NewTaskTagClient(cfg),
 		Team:         NewTeamClient(cfg),
 		User:         NewUserClient(cfg),
 		Workflow:     NewWorkflowClient(cfg),
@@ -207,7 +213,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Role, c.Task, c.TaskRecord, c.Team, c.User, c.Workflow, c.WorkflowNode,
+		c.Role, c.Task, c.TaskRecord, c.TaskTag, c.Team, c.User, c.Workflow,
+		c.WorkflowNode,
 	} {
 		n.Use(hooks...)
 	}
@@ -217,7 +224,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Role, c.Task, c.TaskRecord, c.Team, c.User, c.Workflow, c.WorkflowNode,
+		c.Role, c.Task, c.TaskRecord, c.TaskTag, c.Team, c.User, c.Workflow,
+		c.WorkflowNode,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -232,6 +240,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Task.mutate(ctx, m)
 	case *TaskRecordMutation:
 		return c.TaskRecord.mutate(ctx, m)
+	case *TaskTagMutation:
+		return c.TaskTag.mutate(ctx, m)
 	case *TeamMutation:
 		return c.Team.mutate(ctx, m)
 	case *UserMutation:
@@ -488,6 +498,22 @@ func (c *TaskClient) QueryTaskRecords(t *Task) *TaskRecordQuery {
 	return query
 }
 
+// QueryTaskTags queries the task_tags edge of a Task.
+func (c *TaskClient) QueryTaskTags(t *Task) *TaskTagQuery {
+	query := (&TaskTagClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, id),
+			sqlgraph.To(tasktag.Table, tasktag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, task.TaskTagsTable, task.TaskTagsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryWorkflow queries the workflow edge of a Task.
 func (c *TaskClient) QueryWorkflow(t *Task) *WorkflowQuery {
 	query := (&WorkflowClient{config: c.config}).Query()
@@ -708,6 +734,140 @@ func (c *TaskRecordClient) mutate(ctx context.Context, m *TaskRecordMutation) (V
 		return (&TaskRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown TaskRecord mutation op: %q", m.Op())
+	}
+}
+
+// TaskTagClient is a client for the TaskTag schema.
+type TaskTagClient struct {
+	config
+}
+
+// NewTaskTagClient returns a client for the TaskTag from the given config.
+func NewTaskTagClient(c config) *TaskTagClient {
+	return &TaskTagClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tasktag.Hooks(f(g(h())))`.
+func (c *TaskTagClient) Use(hooks ...Hook) {
+	c.hooks.TaskTag = append(c.hooks.TaskTag, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tasktag.Intercept(f(g(h())))`.
+func (c *TaskTagClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TaskTag = append(c.inters.TaskTag, interceptors...)
+}
+
+// Create returns a builder for creating a TaskTag entity.
+func (c *TaskTagClient) Create() *TaskTagCreate {
+	mutation := newTaskTagMutation(c.config, OpCreate)
+	return &TaskTagCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TaskTag entities.
+func (c *TaskTagClient) CreateBulk(builders ...*TaskTagCreate) *TaskTagCreateBulk {
+	return &TaskTagCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TaskTag.
+func (c *TaskTagClient) Update() *TaskTagUpdate {
+	mutation := newTaskTagMutation(c.config, OpUpdate)
+	return &TaskTagUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TaskTagClient) UpdateOne(tt *TaskTag) *TaskTagUpdateOne {
+	mutation := newTaskTagMutation(c.config, OpUpdateOne, withTaskTag(tt))
+	return &TaskTagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TaskTagClient) UpdateOneID(id int) *TaskTagUpdateOne {
+	mutation := newTaskTagMutation(c.config, OpUpdateOne, withTaskTagID(id))
+	return &TaskTagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TaskTag.
+func (c *TaskTagClient) Delete() *TaskTagDelete {
+	mutation := newTaskTagMutation(c.config, OpDelete)
+	return &TaskTagDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TaskTagClient) DeleteOne(tt *TaskTag) *TaskTagDeleteOne {
+	return c.DeleteOneID(tt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TaskTagClient) DeleteOneID(id int) *TaskTagDeleteOne {
+	builder := c.Delete().Where(tasktag.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TaskTagDeleteOne{builder}
+}
+
+// Query returns a query builder for TaskTag.
+func (c *TaskTagClient) Query() *TaskTagQuery {
+	return &TaskTagQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTaskTag},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TaskTag entity by its id.
+func (c *TaskTagClient) Get(ctx context.Context, id int) (*TaskTag, error) {
+	return c.Query().Where(tasktag.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TaskTagClient) GetX(ctx context.Context, id int) *TaskTag {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTask queries the task edge of a TaskTag.
+func (c *TaskTagClient) QueryTask(tt *TaskTag) *TaskQuery {
+	query := (&TaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tasktag.Table, tasktag.FieldID, id),
+			sqlgraph.To(task.Table, task.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tasktag.TaskTable, tasktag.TaskPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(tt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TaskTagClient) Hooks() []Hook {
+	return c.hooks.TaskTag
+}
+
+// Interceptors returns the client interceptors.
+func (c *TaskTagClient) Interceptors() []Interceptor {
+	return c.inters.TaskTag
+}
+
+func (c *TaskTagClient) mutate(ctx context.Context, m *TaskTagMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TaskTagCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TaskTagUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TaskTagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TaskTagDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TaskTag mutation op: %q", m.Op())
 	}
 }
 
@@ -1330,9 +1490,10 @@ func (c *WorkflowNodeClient) mutate(ctx context.Context, m *WorkflowNodeMutation
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Role, Task, TaskRecord, Team, User, Workflow, WorkflowNode []ent.Hook
+		Role, Task, TaskRecord, TaskTag, Team, User, Workflow, WorkflowNode []ent.Hook
 	}
 	inters struct {
-		Role, Task, TaskRecord, Team, User, Workflow, WorkflowNode []ent.Interceptor
+		Role, Task, TaskRecord, TaskTag, Team, User, Workflow,
+		WorkflowNode []ent.Interceptor
 	}
 )

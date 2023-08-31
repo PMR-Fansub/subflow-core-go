@@ -10,6 +10,7 @@ import (
 	"subflow-core-go/pkg/ent/predicate"
 	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/taskrecord"
+	"subflow-core-go/pkg/ent/tasktag"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/workflow"
 
@@ -26,6 +27,7 @@ type TaskQuery struct {
 	inters          []Interceptor
 	predicates      []predicate.Task
 	withTaskRecords *TaskRecordQuery
+	withTaskTags    *TaskTagQuery
 	withWorkflow    *WorkflowQuery
 	withTeam        *TeamQuery
 	withFKs         bool
@@ -80,6 +82,28 @@ func (tq *TaskQuery) QueryTaskRecords() *TaskRecordQuery {
 			sqlgraph.From(task.Table, task.FieldID, selector),
 			sqlgraph.To(taskrecord.Table, taskrecord.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, task.TaskRecordsTable, task.TaskRecordsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTaskTags chains the current query on the "task_tags" edge.
+func (tq *TaskQuery) QueryTaskTags() *TaskTagQuery {
+	query := (&TaskTagClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(task.Table, task.FieldID, selector),
+			sqlgraph.To(tasktag.Table, tasktag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, task.TaskTagsTable, task.TaskTagsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -324,6 +348,7 @@ func (tq *TaskQuery) Clone() *TaskQuery {
 		inters:          append([]Interceptor{}, tq.inters...),
 		predicates:      append([]predicate.Task{}, tq.predicates...),
 		withTaskRecords: tq.withTaskRecords.Clone(),
+		withTaskTags:    tq.withTaskTags.Clone(),
 		withWorkflow:    tq.withWorkflow.Clone(),
 		withTeam:        tq.withTeam.Clone(),
 		// clone intermediate query.
@@ -340,6 +365,17 @@ func (tq *TaskQuery) WithTaskRecords(opts ...func(*TaskRecordQuery)) *TaskQuery 
 		opt(query)
 	}
 	tq.withTaskRecords = query
+	return tq
+}
+
+// WithTaskTags tells the query-builder to eager-load the nodes that are connected to
+// the "task_tags" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TaskQuery) WithTaskTags(opts ...func(*TaskTagQuery)) *TaskQuery {
+	query := (&TaskTagClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withTaskTags = query
 	return tq
 }
 
@@ -444,8 +480,9 @@ func (tq *TaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Task, e
 		nodes       = []*Task{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			tq.withTaskRecords != nil,
+			tq.withTaskTags != nil,
 			tq.withWorkflow != nil,
 			tq.withTeam != nil,
 		}
@@ -478,6 +515,13 @@ func (tq *TaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Task, e
 		if err := tq.loadTaskRecords(ctx, query, nodes,
 			func(n *Task) { n.Edges.TaskRecords = []*TaskRecord{} },
 			func(n *Task, e *TaskRecord) { n.Edges.TaskRecords = append(n.Edges.TaskRecords, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withTaskTags; query != nil {
+		if err := tq.loadTaskTags(ctx, query, nodes,
+			func(n *Task) { n.Edges.TaskTags = []*TaskTag{} },
+			func(n *Task, e *TaskTag) { n.Edges.TaskTags = append(n.Edges.TaskTags, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -524,6 +568,67 @@ func (tq *TaskQuery) loadTaskRecords(ctx context.Context, query *TaskRecordQuery
 			return fmt.Errorf(`unexpected referenced foreign-key "task_task_records" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (tq *TaskQuery) loadTaskTags(ctx context.Context, query *TaskTagQuery, nodes []*Task, init func(*Task), assign func(*Task, *TaskTag)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Task)
+	nids := make(map[int]map[*Task]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(task.TaskTagsTable)
+		s.Join(joinT).On(s.C(tasktag.FieldID), joinT.C(task.TaskTagsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(task.TaskTagsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(task.TaskTagsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Task]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*TaskTag](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "task_tags" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

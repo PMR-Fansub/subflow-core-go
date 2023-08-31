@@ -10,6 +10,7 @@ import (
 	"subflow-core-go/pkg/ent/role"
 	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/taskrecord"
+	"subflow-core-go/pkg/ent/tasktag"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"subflow-core-go/pkg/ent/workflow"
@@ -82,6 +83,7 @@ func checkColumn(table, column string) error {
 			role.Table:         role.ValidColumn,
 			task.Table:         task.ValidColumn,
 			taskrecord.Table:   taskrecord.ValidColumn,
+			tasktag.Table:      tasktag.ValidColumn,
 			team.Table:         team.ValidColumn,
 			user.Table:         user.ValidColumn,
 			workflow.Table:     workflow.ValidColumn,

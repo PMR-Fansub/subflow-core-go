@@ -9,6 +9,7 @@ import (
 	"subflow-core-go/pkg/ent/predicate"
 	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/taskrecord"
+	"subflow-core-go/pkg/ent/tasktag"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/workflow"
 	"time"
@@ -132,6 +133,21 @@ func (tu *TaskUpdate) AddTaskRecords(t ...*TaskRecord) *TaskUpdate {
 	return tu.AddTaskRecordIDs(ids...)
 }
 
+// AddTaskTagIDs adds the "task_tags" edge to the TaskTag entity by IDs.
+func (tu *TaskUpdate) AddTaskTagIDs(ids ...int) *TaskUpdate {
+	tu.mutation.AddTaskTagIDs(ids...)
+	return tu
+}
+
+// AddTaskTags adds the "task_tags" edges to the TaskTag entity.
+func (tu *TaskUpdate) AddTaskTags(t ...*TaskTag) *TaskUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddTaskTagIDs(ids...)
+}
+
 // SetWorkflowID sets the "workflow" edge to the Workflow entity by ID.
 func (tu *TaskUpdate) SetWorkflowID(id int) *TaskUpdate {
 	tu.mutation.SetWorkflowID(id)
@@ -194,6 +210,27 @@ func (tu *TaskUpdate) RemoveTaskRecords(t ...*TaskRecord) *TaskUpdate {
 		ids[i] = t[i].ID
 	}
 	return tu.RemoveTaskRecordIDs(ids...)
+}
+
+// ClearTaskTags clears all "task_tags" edges to the TaskTag entity.
+func (tu *TaskUpdate) ClearTaskTags() *TaskUpdate {
+	tu.mutation.ClearTaskTags()
+	return tu
+}
+
+// RemoveTaskTagIDs removes the "task_tags" edge to TaskTag entities by IDs.
+func (tu *TaskUpdate) RemoveTaskTagIDs(ids ...int) *TaskUpdate {
+	tu.mutation.RemoveTaskTagIDs(ids...)
+	return tu
+}
+
+// RemoveTaskTags removes "task_tags" edges to TaskTag entities.
+func (tu *TaskUpdate) RemoveTaskTags(t ...*TaskTag) *TaskUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveTaskTagIDs(ids...)
 }
 
 // ClearWorkflow clears the "workflow" edge to the Workflow entity.
@@ -312,6 +349,51 @@ func (tu *TaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.TaskTagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedTaskTagsIDs(); len(nodes) > 0 && !tu.mutation.TaskTagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.TaskTagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -498,6 +580,21 @@ func (tuo *TaskUpdateOne) AddTaskRecords(t ...*TaskRecord) *TaskUpdateOne {
 	return tuo.AddTaskRecordIDs(ids...)
 }
 
+// AddTaskTagIDs adds the "task_tags" edge to the TaskTag entity by IDs.
+func (tuo *TaskUpdateOne) AddTaskTagIDs(ids ...int) *TaskUpdateOne {
+	tuo.mutation.AddTaskTagIDs(ids...)
+	return tuo
+}
+
+// AddTaskTags adds the "task_tags" edges to the TaskTag entity.
+func (tuo *TaskUpdateOne) AddTaskTags(t ...*TaskTag) *TaskUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddTaskTagIDs(ids...)
+}
+
 // SetWorkflowID sets the "workflow" edge to the Workflow entity by ID.
 func (tuo *TaskUpdateOne) SetWorkflowID(id int) *TaskUpdateOne {
 	tuo.mutation.SetWorkflowID(id)
@@ -560,6 +657,27 @@ func (tuo *TaskUpdateOne) RemoveTaskRecords(t ...*TaskRecord) *TaskUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return tuo.RemoveTaskRecordIDs(ids...)
+}
+
+// ClearTaskTags clears all "task_tags" edges to the TaskTag entity.
+func (tuo *TaskUpdateOne) ClearTaskTags() *TaskUpdateOne {
+	tuo.mutation.ClearTaskTags()
+	return tuo
+}
+
+// RemoveTaskTagIDs removes the "task_tags" edge to TaskTag entities by IDs.
+func (tuo *TaskUpdateOne) RemoveTaskTagIDs(ids ...int) *TaskUpdateOne {
+	tuo.mutation.RemoveTaskTagIDs(ids...)
+	return tuo
+}
+
+// RemoveTaskTags removes "task_tags" edges to TaskTag entities.
+func (tuo *TaskUpdateOne) RemoveTaskTags(t ...*TaskTag) *TaskUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveTaskTagIDs(ids...)
 }
 
 // ClearWorkflow clears the "workflow" edge to the Workflow entity.
@@ -708,6 +826,51 @@ func (tuo *TaskUpdateOne) sqlSave(ctx context.Context) (_node *Task, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.TaskTagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedTaskTagsIDs(); len(nodes) > 0 && !tuo.mutation.TaskTagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.TaskTagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

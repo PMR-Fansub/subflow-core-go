@@ -29,6 +29,7 @@ func (Task) Fields() []ent.Field {
 func (Task) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("task_records", TaskRecord.Type),
+		edge.To("task_tags", TaskTag.Type),
 		edge.From("workflow", Workflow.Type).
 			Ref("tasks").
 			Unique(),

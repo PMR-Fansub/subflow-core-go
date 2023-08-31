@@ -90,6 +90,18 @@ var (
 			},
 		},
 	}
+	// TaskTagsColumns holds the columns for the "task_tags" table.
+	TaskTagsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "desc", Type: field.TypeString, Nullable: true},
+	}
+	// TaskTagsTable holds the schema information for the "task_tags" table.
+	TaskTagsTable = &schema.Table{
+		Name:       "task_tags",
+		Columns:    TaskTagsColumns,
+		PrimaryKey: []*schema.Column{TaskTagsColumns[0]},
+	}
 	// TeamsColumns holds the columns for the "teams" table.
 	TeamsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -161,6 +173,31 @@ var (
 			},
 		},
 	}
+	// TaskTaskTagsColumns holds the columns for the "task_task_tags" table.
+	TaskTaskTagsColumns = []*schema.Column{
+		{Name: "task_id", Type: field.TypeInt},
+		{Name: "task_tag_id", Type: field.TypeInt},
+	}
+	// TaskTaskTagsTable holds the schema information for the "task_task_tags" table.
+	TaskTaskTagsTable = &schema.Table{
+		Name:       "task_task_tags",
+		Columns:    TaskTaskTagsColumns,
+		PrimaryKey: []*schema.Column{TaskTaskTagsColumns[0], TaskTaskTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "task_task_tags_task_id",
+				Columns:    []*schema.Column{TaskTaskTagsColumns[0]},
+				RefColumns: []*schema.Column{TasksColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "task_task_tags_task_tag_id",
+				Columns:    []*schema.Column{TaskTaskTagsColumns[1]},
+				RefColumns: []*schema.Column{TaskTagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// TeamUsersColumns holds the columns for the "team_users" table.
 	TeamUsersColumns = []*schema.Column{
 		{Name: "team_id", Type: field.TypeInt},
@@ -216,10 +253,12 @@ var (
 		RolesTable,
 		TasksTable,
 		TaskRecordsTable,
+		TaskTagsTable,
 		TeamsTable,
 		UsersTable,
 		WorkflowsTable,
 		WorkflowNodesTable,
+		TaskTaskTagsTable,
 		TeamUsersTable,
 		UserRolesTable,
 	}
@@ -232,6 +271,8 @@ func init() {
 	TaskRecordsTable.ForeignKeys[1].RefTable = UsersTable
 	TaskRecordsTable.ForeignKeys[2].RefTable = WorkflowNodesTable
 	WorkflowNodesTable.ForeignKeys[0].RefTable = WorkflowsTable
+	TaskTaskTagsTable.ForeignKeys[0].RefTable = TasksTable
+	TaskTaskTagsTable.ForeignKeys[1].RefTable = TaskTagsTable
 	TeamUsersTable.ForeignKeys[0].RefTable = TeamsTable
 	TeamUsersTable.ForeignKeys[1].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable

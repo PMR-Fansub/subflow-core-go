@@ -15,6 +15,9 @@ type Task func(*sql.Selector)
 // TaskRecord is the predicate function for taskrecord builders.
 type TaskRecord func(*sql.Selector)
 
+// TaskTag is the predicate function for tasktag builders.
+type TaskTag func(*sql.Selector)
+
 // Team is the predicate function for team builders.
 type Team func(*sql.Selector)
 

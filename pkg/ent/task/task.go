@@ -28,6 +28,8 @@ const (
 	FieldCompletedAt = "completed_at"
 	// EdgeTaskRecords holds the string denoting the task_records edge name in mutations.
 	EdgeTaskRecords = "task_records"
+	// EdgeTaskTags holds the string denoting the task_tags edge name in mutations.
+	EdgeTaskTags = "task_tags"
 	// EdgeWorkflow holds the string denoting the workflow edge name in mutations.
 	EdgeWorkflow = "workflow"
 	// EdgeTeam holds the string denoting the team edge name in mutations.
@@ -41,6 +43,11 @@ const (
 	TaskRecordsInverseTable = "task_records"
 	// TaskRecordsColumn is the table column denoting the task_records relation/edge.
 	TaskRecordsColumn = "task_task_records"
+	// TaskTagsTable is the table that holds the task_tags relation/edge. The primary key declared below.
+	TaskTagsTable = "task_task_tags"
+	// TaskTagsInverseTable is the table name for the TaskTag entity.
+	// It exists in this package in order to avoid circular dependency with the "tasktag" package.
+	TaskTagsInverseTable = "task_tags"
 	// WorkflowTable is the table that holds the workflow relation/edge.
 	WorkflowTable = "tasks"
 	// WorkflowInverseTable is the table name for the Workflow entity.
@@ -74,6 +81,12 @@ var ForeignKeys = []string{
 	"team_tasks",
 	"workflow_tasks",
 }
+
+var (
+	// TaskTagsPrimaryKey and TaskTagsColumn2 are the table columns denoting the
+	// primary key for the task_tags relation (M2M).
+	TaskTagsPrimaryKey = []string{"task_id", "task_tag_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -147,6 +160,20 @@ func ByTaskRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByTaskTagsCount orders the results by task_tags count.
+func ByTaskTagsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTaskTagsStep(), opts...)
+	}
+}
+
+// ByTaskTags orders the results by task_tags terms.
+func ByTaskTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTaskTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByWorkflowField orders the results by workflow field.
 func ByWorkflowField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -165,6 +192,13 @@ func newTaskRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TaskRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TaskRecordsTable, TaskRecordsColumn),
+	)
+}
+func newTaskTagsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TaskTagsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, TaskTagsTable, TaskTagsPrimaryKey...),
 	)
 }
 func newWorkflowStep() *sqlgraph.Step {

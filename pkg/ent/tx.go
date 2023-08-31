@@ -18,6 +18,8 @@ type Tx struct {
 	Task *TaskClient
 	// TaskRecord is the client for interacting with the TaskRecord builders.
 	TaskRecord *TaskRecordClient
+	// TaskTag is the client for interacting with the TaskTag builders.
+	TaskTag *TaskTagClient
 	// Team is the client for interacting with the Team builders.
 	Team *TeamClient
 	// User is the client for interacting with the User builders.
@@ -160,6 +162,7 @@ func (tx *Tx) init() {
 	tx.Role = NewRoleClient(tx.config)
 	tx.Task = NewTaskClient(tx.config)
 	tx.TaskRecord = NewTaskRecordClient(tx.config)
+	tx.TaskTag = NewTaskTagClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Workflow = NewWorkflowClient(tx.config)

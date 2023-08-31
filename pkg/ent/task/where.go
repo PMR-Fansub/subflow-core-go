@@ -418,6 +418,29 @@ func HasTaskRecordsWith(preds ...predicate.TaskRecord) predicate.Task {
 	})
 }
 
+// HasTaskTags applies the HasEdge predicate on the "task_tags" edge.
+func HasTaskTags() predicate.Task {
+	return predicate.Task(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaskTagsTable, TaskTagsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaskTagsWith applies the HasEdge predicate on the "task_tags" edge with a given conditions (other predicates).
+func HasTaskTagsWith(preds ...predicate.TaskTag) predicate.Task {
+	return predicate.Task(func(s *sql.Selector) {
+		step := newTaskTagsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasWorkflow applies the HasEdge predicate on the "workflow" edge.
 func HasWorkflow() predicate.Task {
 	return predicate.Task(func(s *sql.Selector) {

@@ -7,6 +7,7 @@ import (
 	"subflow-core-go/pkg/ent/schema"
 	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/taskrecord"
+	"subflow-core-go/pkg/ent/tasktag"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/user"
 	"time"
@@ -34,6 +35,12 @@ func init() {
 	taskrecordDescCreatedAt := taskrecordFields[1].Descriptor()
 	// taskrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
 	taskrecord.DefaultCreatedAt = taskrecordDescCreatedAt.Default.(time.Time)
+	tasktagFields := schema.TaskTag{}.Fields()
+	_ = tasktagFields
+	// tasktagDescName is the schema descriptor for name field.
+	tasktagDescName := tasktagFields[0].Descriptor()
+	// tasktag.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tasktag.NameValidator = tasktagDescName.Validators[0].(func(string) error)
 	teamFields := schema.Team{}.Fields()
 	_ = teamFields
 	// teamDescName is the schema descriptor for name field.

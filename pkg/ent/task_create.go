@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"subflow-core-go/pkg/ent/task"
 	"subflow-core-go/pkg/ent/taskrecord"
+	"subflow-core-go/pkg/ent/tasktag"
 	"subflow-core-go/pkg/ent/team"
 	"subflow-core-go/pkg/ent/workflow"
 	"time"
@@ -98,6 +99,21 @@ func (tc *TaskCreate) AddTaskRecords(t ...*TaskRecord) *TaskCreate {
 		ids[i] = t[i].ID
 	}
 	return tc.AddTaskRecordIDs(ids...)
+}
+
+// AddTaskTagIDs adds the "task_tags" edge to the TaskTag entity by IDs.
+func (tc *TaskCreate) AddTaskTagIDs(ids ...int) *TaskCreate {
+	tc.mutation.AddTaskTagIDs(ids...)
+	return tc
+}
+
+// AddTaskTags adds the "task_tags" edges to the TaskTag entity.
+func (tc *TaskCreate) AddTaskTags(t ...*TaskTag) *TaskCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTaskTagIDs(ids...)
 }
 
 // SetWorkflowID sets the "workflow" edge to the Workflow entity by ID.
@@ -253,6 +269,22 @@ func (tc *TaskCreate) createSpec() (*Task, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(taskrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.TaskTagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   task.TaskTagsTable,
+			Columns: task.TaskTagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tasktag.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

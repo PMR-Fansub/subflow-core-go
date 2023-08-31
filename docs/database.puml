@@ -62,6 +62,13 @@ entity TaskRecord {
   * workflow_node_id : number <<FK>>
 }
 
+entity TaskTag {
+  * id : number <<generated>>
+  ---
+  * name : text
+  desc : text
+}
+
 entity Workflow {
   * id : number <<generated>>
   ---
@@ -87,8 +94,9 @@ User }|--o{ Team
 Workflow ||--|{ WorkflowNode
 
 Task ||--o{ TaskRecord
-Task ||--|| Workflow
-Task ||--|| Team
+Task }|--|| Workflow
+Task }|--|| Team
+Task }|--o{ TaskTag
 
 TaskRecord }|--|{ User
 TaskRecord }|--|{ WorkflowNode

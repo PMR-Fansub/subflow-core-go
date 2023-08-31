@@ -44,6 +44,18 @@ func (f TaskRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TaskRecordMutation", m)
 }
 
+// The TaskTagFunc type is an adapter to allow the use of ordinary
+// function as TaskTag mutator.
+type TaskTagFunc func(context.Context, *ent.TaskTagMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TaskTagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TaskTagMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TaskTagMutation", m)
+}
+
 // The TeamFunc type is an adapter to allow the use of ordinary
 // function as Team mutator.
 type TeamFunc func(context.Context, *ent.TeamMutation) (ent.Value, error)

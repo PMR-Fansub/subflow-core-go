@@ -43,13 +43,15 @@ type Task struct {
 type TaskEdges struct {
 	// TaskRecords holds the value of the task_records edge.
 	TaskRecords []*TaskRecord `json:"task_records,omitempty"`
+	// TaskTags holds the value of the task_tags edge.
+	TaskTags []*TaskTag `json:"task_tags,omitempty"`
 	// Workflow holds the value of the workflow edge.
 	Workflow *Workflow `json:"workflow,omitempty"`
 	// Team holds the value of the team edge.
 	Team *Team `json:"team,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // TaskRecordsOrErr returns the TaskRecords value or an error if the edge
@@ -61,10 +63,19 @@ func (e TaskEdges) TaskRecordsOrErr() ([]*TaskRecord, error) {
 	return nil, &NotLoadedError{edge: "task_records"}
 }
 
+// TaskTagsOrErr returns the TaskTags value or an error if the edge
+// was not loaded in eager-loading.
+func (e TaskEdges) TaskTagsOrErr() ([]*TaskTag, error) {
+	if e.loadedTypes[1] {
+		return e.TaskTags, nil
+	}
+	return nil, &NotLoadedError{edge: "task_tags"}
+}
+
 // WorkflowOrErr returns the Workflow value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e TaskEdges) WorkflowOrErr() (*Workflow, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		if e.Workflow == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: workflow.Label}
@@ -77,7 +88,7 @@ func (e TaskEdges) WorkflowOrErr() (*Workflow, error) {
 // TeamOrErr returns the Team value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e TaskEdges) TeamOrErr() (*Team, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		if e.Team == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: team.Label}
@@ -189,6 +200,11 @@ func (t *Task) Value(name string) (ent.Value, error) {
 // QueryTaskRecords queries the "task_records" edge of the Task entity.
 func (t *Task) QueryTaskRecords() *TaskRecordQuery {
 	return NewTaskClient(t.config).QueryTaskRecords(t)
+}
+
+// QueryTaskTags queries the "task_tags" edge of the Task entity.
+func (t *Task) QueryTaskTags() *TaskTagQuery {
+	return NewTaskClient(t.config).QueryTaskTags(t)
 }
 
 // QueryWorkflow queries the "workflow" edge of the Task entity.
