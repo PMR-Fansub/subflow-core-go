@@ -185,6 +185,7 @@ paths:
       summary: Get current logged user info
       tags:
       - user
+  /users:
     patch:
       consumes:
       - application/json
@@ -212,7 +213,7 @@ paths:
       summary: Update current logged user info
       tags:
       - user
-  /user/{id}:
+  /users/{id}:
     get:
       consumes:
       - application/json
@@ -269,7 +270,7 @@ paths:
       summary: Update user info by UID (admin)
       tags:
       - user
-  /user/{id}/teams:
+  /users/{id}/teams:
     get:
       consumes:
       - application/json

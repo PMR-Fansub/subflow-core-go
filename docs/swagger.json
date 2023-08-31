@@ -139,7 +139,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/users": {
             "patch": {
                 "security": [
                     {
@@ -189,7 +191,7 @@
                 }
             }
         },
-        "/user/{id}": {
+        "/users/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -287,7 +289,7 @@
                 }
             }
         },
-        "/user/{id}/teams": {
+        "/users/{id}/teams": {
             "get": {
                 "consumes": [
                     "application/json"

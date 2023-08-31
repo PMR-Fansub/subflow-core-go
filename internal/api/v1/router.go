@@ -59,11 +59,11 @@ func (r *Router) SetupAuth() {
 }
 
 func (r *Router) SetupUser() {
-	userGrp := r.router.Group("user")
+	userGrp := r.router.Group("users")
 	userGrp.Get("/:id", handler.WrapHandlerWithAutoParse(r.handler.GetUserByID))
 	userGrp.Get("/:id/teams", handler.WrapHandlerWithAutoParse(r.handler.GetUserTeamsByID))
 
-	userGrpWithAuth := r.router.Group("user", r.jwtMiddleware)
+	userGrpWithAuth := r.router.Group("users", r.jwtMiddleware)
 	userGrpWithAuth.Get("/", handler.WrapHandlerWithAutoParse(r.handler.GetCurrentUser))
 	userGrpWithAuth.Patch("/", handler.WrapHandlerWithAutoParse(r.handler.UpdateCurrentUser))
 	userGrpWithAuth.Patch(

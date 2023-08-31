@@ -61,7 +61,7 @@ func (h *Handler) GetCurrentUser(c *fiber.Ctx, req GetUserReq) (*dto.UserInfo, e
 //	@Produce	json
 //	@Param		id	path		int	true	"user id"
 //	@Success	200	{object}	common.APIResponse{data=dto.UserBasicInfo}
-//	@Router		/user/{id} [get]
+//	@Router		/users/{id} [get]
 func (h *Handler) GetUserByID(c *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicInfo, error) {
 	user, err := h.service.FindUserByID(context.Background(), req.ID)
 	if err != nil {
@@ -80,7 +80,7 @@ func (h *Handler) GetUserByID(c *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicI
 //	@Security	ApiKeyAuth
 //	@Param		message	body		UpdateCurUserReq	true	"user info to update"
 //	@Success	200		{object}	common.APIResponse{data=UpdateUserInfoResp}
-//	@Router		/user [patch]
+//	@Router		/users [patch]
 func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*UpdateUserInfoResp, error) {
 	claim, err := helper.GetClaimFromFiberCtx(c)
 	if err != nil {
@@ -105,7 +105,7 @@ func (h *Handler) UpdateCurrentUser(c *fiber.Ctx, req UpdateCurUserReq) (*Update
 //	@Param		id		path		int					true	"user id"
 //	@Param		message	body		UpdateCurUserReq	true	"user info to update"
 //	@Success	200		{object}	common.APIResponse{data=UpdateUserInfoResp}
-//	@Router		/user/{id} [patch]
+//	@Router		/users/{id} [patch]
 func (h *Handler) UpdateUser(c *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoResp, error) {
 	err := h.service.UpdateUser(
 		context.Background(), &dto.UpdateUserReq{
@@ -124,7 +124,7 @@ func (h *Handler) UpdateUser(c *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoRe
 //	@Produce	json
 //	@Param		id	path		int	true	"user id"
 //	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
-//	@Router		/user/{id}/teams [get]
+//	@Router		/users/{id}/teams [get]
 func (h *Handler) GetUserTeamsByID(ctx *fiber.Ctx, req GetUserTeamsByIDReq) ([]*dto.TeamInfo, error) {
 	u, err := h.service.FindUserByID(context.Background(), req.UID)
 	if err != nil {

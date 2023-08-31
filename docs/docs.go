@@ -147,7 +147,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/users": {
             "patch": {
                 "security": [
                     {
@@ -197,7 +199,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{id}": {
+        "/users/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -295,7 +297,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{id}/teams": {
+        "/users/{id}/teams": {
             "get": {
                 "consumes": [
                     "application/json"
