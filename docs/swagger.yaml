@@ -12,6 +12,36 @@ definitions:
       timestamp:
         type: integer
     type: object
+  dto.TaskInfo:
+    properties:
+      completedAt:
+        type: string
+      createdAt:
+        type: string
+      desc:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/dto.TaskTagInfo'
+        type: array
+      type:
+        type: integer
+    type: object
+  dto.TaskTagInfo:
+    properties:
+      desc:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   dto.TeamInfo:
     properties:
       QQGroup:
@@ -31,8 +61,6 @@ definitions:
     properties:
       avatar:
         type: string
-      email:
-        type: string
       id:
         type: integer
       nickname:
@@ -43,8 +71,6 @@ definitions:
   dto.UserInfo:
     properties:
       avatar:
-        type: string
-      email:
         type: string
       id:
         type: integer
@@ -60,6 +86,19 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  handler.CreateNewTeamReq:
+    properties:
+      QQGroup:
+        type: string
+      desc:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+    required:
+    - name
     type: object
   handler.LoginRequest:
     properties:
@@ -100,6 +139,24 @@ definitions:
     properties:
       nickname:
         type: string
+    type: object
+  handler.UpdateTeamReq:
+    properties:
+      QQGroup:
+        type: string
+      desc:
+        type: string
+      id:
+        type: integer
+      logo:
+        type: string
+      name:
+        type: string
+      status:
+        enum:
+        - 1
+        - 2
+        type: integer
     type: object
   handler.UpdateUserInfoResp:
     type: object
@@ -164,6 +221,163 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /team:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: new team info
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateNewTeamReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TeamInfo'
+              type: object
+      summary: Create new team
+      tags:
+      - team
+  /team/{id}:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: team id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: team info
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateTeamReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TeamInfo'
+              type: object
+      summary: Update the team for the specified team
+      tags:
+      - team
+  /teams:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TeamInfo'
+                  type: array
+              type: object
+      summary: Get all teams
+      tags:
+      - team
+  /teams/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: team id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TeamInfo'
+              type: object
+      summary: Get team info by ID
+      tags:
+      - team
+  /teams/{id}/tasks:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: team id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TaskInfo'
+                  type: array
+              type: object
+      summary: Get all tasks for the specified team
+      tags:
+      - team
+  /teams/{id}/users:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: team id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.UserBasicInfo'
+                  type: array
+              type: object
+      summary: Get all users for the specified team
+      tags:
+      - team
   /user:
     get:
       consumes:
