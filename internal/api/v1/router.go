@@ -77,7 +77,15 @@ func (r *Router) SetupUser() {
 }
 
 func (r *Router) SetupTeam() {
-	// teamGrp := r.router.Group("team")
+	grp := r.router.Group("teams")
+	grp.Get("/", handler.WithAutoParse(r.handler.GetAllTeams))
+	grp.Get("/:id", handler.WithAutoParse(r.handler.GetTeamByID))
+	grp.Get("/:id/users", handler.WithAutoParse(r.handler.GetTeamUsersByID))
+	grp.Get("/:id/tasks", handler.WithAutoParse(r.handler.GetTeamTasksByID))
+
+	grpWithAuth := r.router.Group("teams", r.jwtMiddleware)
+	grpWithAuth.Post("/", handler.WithAutoParse(r.handler.CreateNewTeam))          // TODO: more access control
+	grpWithAuth.Patch("/:id", handler.WithAutoParse(r.handler.UpdateTeamInfoByID)) // TODO: more access control
 }
 
 func (r *Router) SetupWorkFlow() {

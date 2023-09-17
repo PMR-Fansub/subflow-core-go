@@ -1,1 +1,153 @@
 package handler
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"subflow-core-go/internal/api/v1/service/dto"
+)
+
+type GetAllTeamsReq struct{}
+
+type GetTeamUsersByIDReq struct {
+	ID int `params:"id"`
+}
+
+type GetTeamByIDReq struct {
+	ID int `params:"id"`
+}
+
+type GetTeamTasksByIDReq struct {
+	ID int `params:"id"`
+}
+
+type CreateNewTeamReq struct {
+	Name    string `json:"name" validate:"required"`
+	QQGroup string `json:"QQGroup"`
+	Logo    string `json:"logo"`
+	Desc    string `json:"desc"`
+}
+
+type UpdateTeamReq struct {
+	ID      int    `params:"id"`
+	Status  int    `json:"status" validate:"oneof=1 2"`
+	Name    string `json:"name"`
+	QQGroup string `json:"QQGroup"`
+	Logo    string `json:"logo"`
+	Desc    string `json:"desc"`
+}
+
+// GetAllTeams godoc
+//
+//	@Summary	Get all teams
+//	@Tags		team
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
+//	@Router		/teams [get]
+func (h *Handler) GetAllTeams(ctx *fiber.Ctx, _ GetAllTeamsReq) ([]*dto.TeamInfo, error) {
+	teams, err := h.service.GetAllTeamsInfo(ctx.Context())
+	if err != nil {
+		return nil, err
+	}
+	return dto.GetTeamInfoFromEntities(teams), err
+}
+
+// GetTeamByID godoc
+//
+//	@Summary	Get team info by ID
+//	@Tags		team
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		int	true	"team id"
+//	@Success	200	{object}	common.APIResponse{data=dto.TeamInfo}
+//	@Router		/teams/{id} [get]
+func (h *Handler) GetTeamByID(ctx *fiber.Ctx, req GetTeamByIDReq) (*dto.TeamInfo, error) {
+	t, err := h.service.GetTeamInfoByID(ctx.Context(), req.ID)
+	if err != nil {
+		return nil, err
+	}
+	return dto.GetTeamInfoFromEntity(t), nil
+}
+
+// GetTeamUsersByID godoc
+//
+//	@Summary	Get all users for the specified team
+//	@Tags		team
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		int	true	"team id"
+//	@Success	200	{object}	common.APIResponse{data=[]dto.UserBasicInfo}
+//	@Router		/teams/{id}/users [get]
+func (h *Handler) GetTeamUsersByID(ctx *fiber.Ctx, req GetTeamUsersByIDReq) ([]*dto.UserBasicInfo, error) {
+	us, err := h.service.GetAllUsersOfTeamByID(ctx.Context(), req.ID)
+	if err != nil {
+		return nil, err
+	}
+	return dto.GetBasicInfoFromUsers(us), nil
+}
+
+// GetTeamTasksByID godoc
+//
+//	@Summary	Get all tasks for the specified team
+//	@Tags		team
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		int	true	"team id"
+//	@Success	200	{object}	common.APIResponse{data=[]dto.TaskInfo}
+//	@Router		/teams/{id}/tasks [get]
+func (h *Handler) GetTeamTasksByID(ctx *fiber.Ctx, req GetTeamTasksByIDReq) ([]*dto.TaskInfo, error) {
+	tasks, err := h.service.GetAllTasksOfTeamByID(ctx.Context(), req.ID)
+	if err != nil {
+		return nil, err
+	}
+	return dto.GetTaskInfoFromEntities(tasks), nil
+}
+
+// CreateNewTeam godoc
+//
+//	@Summary	Create new team
+//	@Tags		team
+//	@Accept		json
+//	@Produce	json
+//	@Param		message	body		CreateNewTeamReq	true	"new team info"
+//	@Success	200		{object}	common.APIResponse{data=dto.TeamInfo}
+//	@Router		/team [post]
+func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (*dto.TeamInfo, error) {
+	t, err := h.service.CreateNewTeam(
+		ctx.Context(), &dto.TeamInfo{
+			Name:    req.Name,
+			QQGroup: req.QQGroup,
+			Logo:    req.Logo,
+			Desc:    req.Desc,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return dto.GetTeamInfoFromEntity(t), nil
+}
+
+// UpdateTeamInfoByID godoc
+//
+//	@Summary	Update the team for the specified team
+//	@Tags		team
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		int				true	"team id"
+//	@Param		message	body		UpdateTeamReq	true	"team info"
+//	@Success	200		{object}	common.APIResponse{data=dto.TeamInfo}
+//	@Router		/team/{id} [patch]
+func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.TeamInfo, error) {
+	t, err := h.service.UpdateTeamInfoByID(
+		ctx.Context(), req.ID, &dto.TeamInfo{
+			Name:    req.Name,
+			Status:  req.Status,
+			QQGroup: req.QQGroup,
+			Logo:    req.Logo,
+			Desc:    req.Desc,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return dto.GetTeamInfoFromEntity(t), nil
+}
