@@ -24,7 +24,7 @@ type Result struct {
 var (
 	ResultSuccess             = Result{true, 1000, fiber.StatusOK, "操作成功"}
 	ResultFailed              = Result{false, 1001, fiber.StatusBadRequest, "操作失败"}
-	ResultCreateUserFailed    = Result{false, 1002, fiber.StatusUnprocessableEntity, "创建用户失败"}
+	ResultCreationFailed      = Result{false, 1002, fiber.StatusUnprocessableEntity, "创建失败"}
 	ResultFormInvalid         = Result{false, 1003, fiber.StatusUnprocessableEntity, "表单验证失败"}
 	ResultUnauthorized        = Result{false, 1004, fiber.StatusUnauthorized, "身份验证失败"}
 	ResultUserOperationFailed = Result{false, 1005, fiber.StatusBadRequest, "用户操作失败"}

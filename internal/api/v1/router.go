@@ -54,25 +54,25 @@ func (r *Router) SetupHealthCheck() fiber.Router {
 
 func (r *Router) SetupAuth() {
 	auth := r.router.Group("auth")
-	auth.Post("register", handler.WrapHandlerWithAutoParse(r.handler.Register))
-	auth.Post("login", handler.WrapHandlerWithAutoParse(r.handler.Login))
+	auth.Post("register", handler.WithAutoParse(r.handler.Register))
+	auth.Post("login", handler.WithAutoParse(r.handler.Login))
 }
 
 func (r *Router) SetupUser() {
-	userGrp := r.router.Group("users")
-	userGrp.Get("/:id", handler.WrapHandlerWithAutoParse(r.handler.GetUserByID))
-	userGrp.Get("/:id/teams", handler.WrapHandlerWithAutoParse(r.handler.GetUserTeamsByID))
+	grp := r.router.Group("users")
+	grp.Get("/:id", handler.WithAutoParse(r.handler.GetUserByID))
+	grp.Get("/:id/teams", handler.WithAutoParse(r.handler.GetUserTeamsByID))
 
-	userGrpWithAuth := r.router.Group("users", r.jwtMiddleware)
-	userGrpWithAuth.Get("/", handler.WrapHandlerWithAutoParse(r.handler.GetCurrentUser))
-	userGrpWithAuth.Patch("/", handler.WrapHandlerWithAutoParse(r.handler.UpdateCurrentUser))
-	userGrpWithAuth.Patch(
+	grpWithAuth := r.router.Group("users", r.jwtMiddleware)
+	grpWithAuth.Get("/", handler.WithAutoParse(r.handler.GetCurrentUser))
+	grpWithAuth.Patch("/", handler.WithAutoParse(r.handler.UpdateCurrentUser))
+	grpWithAuth.Patch(
 		"/:id",
 		r.casbinMiddleware.RequiresRoles(
 			[]string{constants.RoleNameAdmin, constants.RoleNameSuperuser},
 			casbinware.WithValidationRule(casbinware.AtLeastOneRule),
 		),
-		handler.WrapHandlerWithAutoParse(r.handler.UpdateUser),
+		handler.WithAutoParse(r.handler.UpdateUser),
 	)
 }
 

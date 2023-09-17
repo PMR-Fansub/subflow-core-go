@@ -14,32 +14,6 @@ import (
 	"subflow-core-go/pkg/ent/user"
 )
 
-func GetBasicInfoFromUser(u *ent.User) *dto.UserBasicInfo {
-	if u == nil {
-		return nil
-	}
-	return &dto.UserBasicInfo{
-		ID:       u.ID,
-		Username: u.Username,
-		Email:    u.Email,
-		Nickname: u.Nickname,
-		Avatar:   u.Avatar,
-	}
-}
-
-func GetInfoFromUser(u *ent.User) *dto.UserInfo {
-	if u == nil {
-		return nil
-	}
-	return &dto.UserInfo{
-		UserBasicInfo: GetBasicInfoFromUser(u),
-		RegisterTime:  &u.RegisteredAt,
-		RegisterIP:    u.RegisterIP,
-		LoginTime:     &u.LastLoggedAt,
-		LoginIP:       u.LoginIP,
-	}
-}
-
 func (s *Service) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
@@ -85,13 +59,13 @@ func (s *Service) FindUserByEmail(ctx context.Context, email string) (*ent.User,
 func (s *Service) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
 	if u, _ := s.FindUserByUsername(ctx, req.Username); u != nil {
 		return nil, &common.BusinessError{
-			Code:    common.ResultCreateUserFailed,
+			Code:    common.ResultCreationFailed,
 			Message: "用户名已存在",
 		}
 	}
 	if u, _ := s.FindUserByEmail(ctx, req.Email); u != nil {
 		return nil, &common.BusinessError{
-			Code:    common.ResultCreateUserFailed,
+			Code:    common.ResultCreationFailed,
 			Message: "邮箱已被使用",
 		}
 	}
@@ -156,4 +130,14 @@ func (s *Service) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error 
 	}
 
 	return nil
+}
+
+func (s *Service) GetTeamsOfUser(ctx context.Context, u *ent.User) (ent.Teams, error) {
+	t, err := u.
+		QueryTeams().
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
