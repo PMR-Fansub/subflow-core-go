@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"subflow-core-go/internal/api/helper"
-	"subflow-core-go/internal/api/v1/service"
 	"subflow-core-go/internal/api/v1/service/dto"
 )
 
@@ -37,9 +35,9 @@ type RegisterResponse struct{}
 //	@Param		message	body		RegisterRequest	true	"user info to create"
 //	@Success	200		{object}	common.APIResponse{data=RegisterResponse}
 //	@Router		/auth/register [post]
-func (h *Handler) Register(c *fiber.Ctx, req RegisterRequest) (*RegisterResponse, error) {
-	req.RemoteAddr = c.IP()
-	_, err := h.service.CreateUser(context.Background(), req.CreateUserRequest)
+func (h *Handler) Register(ctx *fiber.Ctx, req RegisterRequest) (*RegisterResponse, error) {
+	req.RemoteAddr = ctx.IP()
+	_, err := h.service.CreateUser(ctx.Context(), req.CreateUserRequest)
 	return nil, err
 }
 
@@ -52,15 +50,15 @@ func (h *Handler) Register(c *fiber.Ctx, req RegisterRequest) (*RegisterResponse
 //	@Param		message	body		LoginRequest	true	"login form"
 //	@Success	200		{object}	common.APIResponse{data=LoginResponse}
 //	@Router		/auth/login [post]
-func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) {
+func (h *Handler) Login(ctx *fiber.Ctx, req LoginRequest) (*LoginResponse, error) {
 	var resp LoginResponse
 
-	user, err := h.service.VerifyPwdByUsername(context.Background(), req.Username, req.Password)
+	user, err := h.service.VerifyPwdByUsername(ctx.Context(), req.Username, req.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.service.RefreshLastLoginTimeAndIP(context.Background(), user, time.Now(), c.IP())
+	err = h.service.RefreshLastLoginTimeAndIP(ctx.Context(), user, time.Now(), ctx.IP())
 	if err != nil {
 		return nil, err
 	}
@@ -79,10 +77,10 @@ func (h *Handler) Login(c *fiber.Ctx, req LoginRequest) (*LoginResponse, error) 
 	}
 
 	resp.Token = token
-	resp.UserInfo = service.GetBasicInfoFromUser(user)
+	resp.UserInfo = dto.GetBasicInfoFromUser(user)
 
 	if req.WithCookie {
-		c.Cookie(
+		ctx.Cookie(
 			&fiber.Cookie{
 				Name:     "auth_token",
 				Value:    token,

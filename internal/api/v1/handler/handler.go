@@ -28,14 +28,14 @@ func New(service *service.Service, cfg *config.Config, enforcer *casbin.Enforcer
 	}
 }
 
-func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx, Request) (Response, error)) fiber.Handler {
+func WithAutoParse[Request any, Response any](handle func(*fiber.Ctx, Request) (Response, error)) fiber.Handler {
 	validate := validator.New()
 
-	return func(c *fiber.Ctx) error {
+	return func(ctx *fiber.Ctx) error {
 		var req Request
 		var err error
 
-		err = c.ParamsParser(&req)
+		err = ctx.ParamsParser(&req)
 		if err != nil {
 			zap.S().Errorw(
 				"Failed to parse params",
@@ -44,7 +44,7 @@ func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx,
 			return err
 		}
 
-		err = c.BodyParser(&req)
+		err = ctx.BodyParser(&req)
 		if err != nil && !errors.Is(err, fiber.ErrUnprocessableEntity) {
 			zap.S().Errorw(
 				"Failed to parse body",
@@ -53,7 +53,7 @@ func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx,
 			return err
 		}
 
-		err = c.QueryParser(&req)
+		err = ctx.QueryParser(&req)
 		if err != nil {
 			zap.S().Errorw(
 				"Failed to parse query",
@@ -73,12 +73,12 @@ func WrapHandlerWithAutoParse[Request any, Response any](handle func(*fiber.Ctx,
 			"handler", runtime.FuncForPC(reflect.ValueOf(handle).Pointer()).Name(),
 			"req", req,
 		)
-		resp, err := handle(c, req)
+		resp, err := handle(ctx, req)
 		if err != nil {
 			return err
 		}
 
 		wrappedResp := common.MakeSuccessAPIResponse(resp)
-		return c.JSON(wrappedResp)
+		return ctx.JSON(wrappedResp)
 	}
 }
