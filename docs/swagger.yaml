@@ -221,7 +221,27 @@ paths:
       summary: Register a new user
       tags:
       - auth
-  /team:
+  /teams:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TeamInfo'
+                  type: array
+              type: object
+      summary: Get all teams
+      tags:
+      - teams
     post:
       consumes:
       - application/json
@@ -246,8 +266,32 @@ paths:
               type: object
       summary: Create new team
       tags:
-      - team
-  /team/{id}:
+      - teams
+  /teams/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: team id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TeamInfo'
+              type: object
+      summary: Get team info by ID
+      tags:
+      - teams
     patch:
       consumes:
       - application/json
@@ -277,53 +321,7 @@ paths:
               type: object
       summary: Update the team for the specified team
       tags:
-      - team
-  /teams:
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.APIResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.TeamInfo'
-                  type: array
-              type: object
-      summary: Get all teams
-      tags:
-      - team
-  /teams/{id}:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: team id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.TeamInfo'
-              type: object
-      summary: Get team info by ID
-      tags:
-      - team
+      - teams
   /teams/{id}/tasks:
     get:
       consumes:
@@ -350,7 +348,7 @@ paths:
               type: object
       summary: Get all tasks for the specified team
       tags:
-      - team
+      - teams
   /teams/{id}/users:
     get:
       consumes:
@@ -377,8 +375,8 @@ paths:
               type: object
       summary: Get all users for the specified team
       tags:
-      - team
-  /user:
+      - teams
+  /users:
     get:
       consumes:
       - application/json
@@ -398,8 +396,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get current logged user info
       tags:
-      - user
-  /users:
+      - users
     patch:
       consumes:
       - application/json
@@ -426,7 +423,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update current logged user info
       tags:
-      - user
+      - users
   /users/{id}:
     get:
       consumes:
@@ -451,7 +448,7 @@ paths:
               type: object
       summary: Get user basic info by UID
       tags:
-      - user
+      - users
     patch:
       consumes:
       - application/json
@@ -483,7 +480,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update user info by UID (admin)
       tags:
-      - user
+      - users
   /users/{id}/teams:
     get:
       consumes:
@@ -510,7 +507,7 @@ paths:
               type: object
       summary: Get all teams that the specified user belongs to
       tags:
-      - user
+      - users
 securityDefinitions:
   ApiKeyAuth:
     in: header

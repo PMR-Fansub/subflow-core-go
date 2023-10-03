@@ -110,7 +110,42 @@ const docTemplate = `{
                 }
             }
         },
-        "/team": {
+        "/teams": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teams"
+                ],
+                "summary": "Get all teams",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.TeamInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -119,7 +154,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "teams"
                 ],
                 "summary": "Create new team",
                 "parameters": [
@@ -155,7 +190,48 @@ const docTemplate = `{
                 }
             }
         },
-        "/team/{id}": {
+        "/teams/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teams"
+                ],
+                "summary": "Get team info by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "team id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TeamInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "patch": {
                 "consumes": [
                     "application/json"
@@ -164,7 +240,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "teams"
                 ],
                 "summary": "Update the team for the specified team",
                 "parameters": [
@@ -207,86 +283,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "team"
-                ],
-                "summary": "Get all teams",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.TeamInfo"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/teams/{id}": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "team"
-                ],
-                "summary": "Get team info by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "team id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.TeamInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/teams/{id}/tasks": {
             "get": {
                 "consumes": [
@@ -296,7 +292,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "teams"
                 ],
                 "summary": "Get all tasks for the specified team",
                 "parameters": [
@@ -342,7 +338,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "team"
+                    "teams"
                 ],
                 "summary": "Get all users for the specified team",
                 "parameters": [
@@ -379,7 +375,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user": {
+        "/users": {
             "get": {
                 "security": [
                     {
@@ -393,7 +389,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "users"
                 ],
                 "summary": "Get current logged user info",
                 "responses": {
@@ -416,9 +412,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/users": {
+            },
             "patch": {
                 "security": [
                     {
@@ -432,7 +426,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "users"
                 ],
                 "summary": "Update current logged user info",
                 "parameters": [
@@ -477,7 +471,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "users"
                 ],
                 "summary": "Get user basic info by UID",
                 "parameters": [
@@ -523,7 +517,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "users"
                 ],
                 "summary": "Update user info by UID (admin)",
                 "parameters": [
@@ -575,7 +569,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "users"
                 ],
                 "summary": "Get all teams that the specified user belongs to",
                 "parameters": [

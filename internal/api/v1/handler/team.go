@@ -38,7 +38,7 @@ type UpdateTeamReq struct {
 // GetAllTeams godoc
 //
 //	@Summary	Get all teams
-//	@Tags		team
+//	@Tags		teams
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
@@ -54,7 +54,7 @@ func (h *Handler) GetAllTeams(ctx *fiber.Ctx, _ GetAllTeamsReq) ([]*dto.TeamInfo
 // GetTeamByID godoc
 //
 //	@Summary	Get team info by ID
-//	@Tags		team
+//	@Tags		teams
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		int	true	"team id"
@@ -71,7 +71,7 @@ func (h *Handler) GetTeamByID(ctx *fiber.Ctx, req GetTeamByIDReq) (*dto.TeamInfo
 // GetTeamUsersByID godoc
 //
 //	@Summary	Get all users for the specified team
-//	@Tags		team
+//	@Tags		teams
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		int	true	"team id"
@@ -88,7 +88,7 @@ func (h *Handler) GetTeamUsersByID(ctx *fiber.Ctx, req GetTeamUsersByIDReq) ([]*
 // GetTeamTasksByID godoc
 //
 //	@Summary	Get all tasks for the specified team
-//	@Tags		team
+//	@Tags		teams
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		int	true	"team id"
@@ -105,12 +105,12 @@ func (h *Handler) GetTeamTasksByID(ctx *fiber.Ctx, req GetTeamTasksByIDReq) ([]*
 // CreateNewTeam godoc
 //
 //	@Summary	Create new team
-//	@Tags		team
+//	@Tags		teams
 //	@Accept		json
 //	@Produce	json
 //	@Param		message	body		CreateNewTeamReq	true	"new team info"
 //	@Success	200		{object}	common.APIResponse{data=dto.TeamInfo}
-//	@Router		/team [post]
+//	@Router		/teams [post]
 func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (*dto.TeamInfo, error) {
 	t, err := h.service.CreateNewTeam(
 		ctx.Context(), &dto.TeamInfo{
@@ -129,13 +129,13 @@ func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (*dto.Team
 // UpdateTeamInfoByID godoc
 //
 //	@Summary	Update the team for the specified team
-//	@Tags		team
+//	@Tags		teams
 //	@Accept		json
 //	@Produce	json
 //	@Param		id		path		int				true	"team id"
 //	@Param		message	body		UpdateTeamReq	true	"team info"
 //	@Success	200		{object}	common.APIResponse{data=dto.TeamInfo}
-//	@Router		/team/{id} [patch]
+//	@Router		/teams/{id} [patch]
 func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.TeamInfo, error) {
 	t, err := h.service.UpdateTeamInfoByID(
 		ctx.Context(), req.ID, &dto.TeamInfo{

@@ -30,12 +30,12 @@ type UpdateUserInfoResp struct{}
 // GetCurrentUser godoc
 //
 //	@Summary	Get current logged user info
-//	@Tags		user
+//	@Tags		users
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
 //	@Success	200	{object}	common.APIResponse{data=dto.UserInfo}
-//	@Router		/user [get]
+//	@Router		/users [get]
 func (h *Handler) GetCurrentUser(ctx *fiber.Ctx, req GetUserReq) (*dto.UserInfo, error) {
 	claim, err := helper.GetClaimFromFiberCtx(ctx)
 	if err != nil {
@@ -53,7 +53,7 @@ func (h *Handler) GetCurrentUser(ctx *fiber.Ctx, req GetUserReq) (*dto.UserInfo,
 // GetUserByID godoc
 //
 //	@Summary	Get user basic info by UID
-//	@Tags		user
+//	@Tags		users
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		int	true	"user id"
@@ -71,7 +71,7 @@ func (h *Handler) GetUserByID(ctx *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasi
 // UpdateCurrentUser godoc
 //
 //	@Summary	Update current logged user info
-//	@Tags		user
+//	@Tags		users
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
@@ -95,7 +95,7 @@ func (h *Handler) UpdateCurrentUser(ctx *fiber.Ctx, req UpdateCurUserReq) (*Upda
 // UpdateUser godoc
 //
 //	@Summary	Update user info by UID (admin)
-//	@Tags		user
+//	@Tags		users
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
@@ -116,7 +116,7 @@ func (h *Handler) UpdateUser(ctx *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfo
 // GetUserTeamsByID godoc
 //
 //	@Summary	Get all teams that the specified user belongs to
-//	@Tags		user
+//	@Tags		users
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		int	true	"user id"
