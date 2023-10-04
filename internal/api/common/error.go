@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"subflow-core-go/pkg/ent"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +41,12 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	if errors.As(err, &validationErrs) {
 		result := ResultFormInvalid
 		resp = MakeAPIResponse(result, validationErrs.Error())
+		return c.Status(result.HttpCode).JSON(resp)
+	}
+
+	if ent.IsNotFound(err) {
+		result := ResultNotFound
+		resp = MakeAPIResponse(result, nil)
 		return c.Status(result.HttpCode).JSON(resp)
 	}
 
