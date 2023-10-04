@@ -17,9 +17,9 @@ func GetTaskTagInfoFromEntity(t *ent.TaskTag) *TaskTagInfo {
 }
 
 func GetTaskTagInfoFromEntities(ts ent.TaskTags) []*TaskTagInfo {
-	var infos []*TaskTagInfo
-	for _, t := range ts {
-		infos = append(infos, GetTaskTagInfoFromEntity(t))
+	infos := make([]*TaskTagInfo, len(ts))
+	for i, t := range ts {
+		infos[i] = GetTaskTagInfoFromEntity(t)
 	}
 	return infos
 }

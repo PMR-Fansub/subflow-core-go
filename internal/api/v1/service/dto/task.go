@@ -31,9 +31,9 @@ func GetTaskInfoFromEntity(t *ent.Task) *TaskInfo {
 }
 
 func GetTaskInfoFromEntities(ts ent.Tasks) []*TaskInfo {
-	var infos []*TaskInfo
-	for _, t := range ts {
-		infos = append(infos, GetTaskInfoFromEntity(t))
+	infos := make([]*TaskInfo, len(ts))
+	for i, t := range ts {
+		infos[i] = GetTaskInfoFromEntity(t)
 	}
 	return infos
 }

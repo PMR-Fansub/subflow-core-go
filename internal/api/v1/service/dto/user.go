@@ -46,9 +46,9 @@ func GetBasicInfoFromUser(u *ent.User) *UserBasicInfo {
 }
 
 func GetBasicInfoFromUsers(us []*ent.User) []*UserBasicInfo {
-	var infos []*UserBasicInfo
-	for _, u := range us {
-		infos = append(infos, GetBasicInfoFromUser(u))
+	infos := make([]*UserBasicInfo, len(us))
+	for i, u := range us {
+		infos[i] = GetBasicInfoFromUser(u)
 	}
 	return infos
 }
