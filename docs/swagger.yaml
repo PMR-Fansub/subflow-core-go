@@ -87,6 +87,15 @@ definitions:
       username:
         type: string
     type: object
+  handler.AddUserToTeamReq:
+    properties:
+      id:
+        type: integer
+      uid:
+        type: integer
+    type: object
+  handler.AddUserToTeamResp:
+    type: object
   handler.CreateNewTeamReq:
     properties:
       QQGroup:
@@ -374,6 +383,36 @@ paths:
                   type: array
               type: object
       summary: Get all users for the specified team
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: team id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: user info
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AddUserToTeamReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.AddUserToTeamResp'
+              type: object
+      summary: Add specified user to team
       tags:
       - teams
   /users:

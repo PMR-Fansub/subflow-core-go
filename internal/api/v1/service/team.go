@@ -49,10 +49,7 @@ func (s *Service) GetAllTeamsInfo(ctx context.Context) (ent.Teams, error) {
 }
 
 func (s *Service) GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error) {
-	t, err := s.db.Team.
-		Query().
-		Where(team.ID(id)).
-		Only(ctx)
+	t, err := s.FindTeamByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

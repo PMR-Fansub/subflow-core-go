@@ -35,6 +35,14 @@ type UpdateTeamReq struct {
 	Desc    string `json:"desc"`
 }
 
+type AddUserToTeamReq struct {
+	ID  int `params:"id"`
+	UID int `json:"uid"`
+}
+
+type AddUserToTeamResp struct {
+}
+
 // GetAllTeams godoc
 //
 //	@Summary	Get all teams
@@ -150,4 +158,26 @@ func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.Te
 		return nil, err
 	}
 	return dto.GetTeamInfoFromEntity(t), nil
+}
+
+// AddUserToTeam godoc
+//
+//	@Summary	Add specified user to team
+//	@Tags		teams
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		int					true	"team id"
+//	@Param		message	body		AddUserToTeamReq	true	"user info"
+//	@Success	200		{object}	common.APIResponse{data=AddUserToTeamResp}
+//	@Router		/teams/{id}/users [post]
+func (h *Handler) AddUserToTeam(ctx *fiber.Ctx, req AddUserToTeamReq) (*AddUserToTeamResp, error) {
+	u, err := h.service.FindUserByID(ctx.Context(), req.UID)
+	if err != nil {
+		return nil, err
+	}
+	err = h.service.AddUsersForTeam(ctx.Context(), req.ID, u)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }

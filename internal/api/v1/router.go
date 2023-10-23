@@ -86,14 +86,24 @@ func (r *Router) SetupTeam() {
 	grpWithAuth := r.router.Group("teams", r.jwtMiddleware)
 	grpWithAuth.Post("/", handler.WithAutoParse(r.handler.CreateNewTeam))          // TODO: more access control
 	grpWithAuth.Patch("/:id", handler.WithAutoParse(r.handler.UpdateTeamInfoByID)) // TODO: more access control
+	grpWithAuth.Post("/:id/users", handler.WithAutoParse(r.handler.AddUserToTeam)) // TODO: more access control
 }
 
 func (r *Router) SetupWorkFlow() {
+	// grp := r.router.Group("workflows")
+	// grp.Get("/", handler.WithAutoParse(r.handler.GetAllWorkflows))
+	// grp.Get("/:id", handler.WithAutoParse(r.handler.GetWorkflowByID))
+	// grp.Get("/:id/nodes", handler.WithAutoParse(r.handler.GetWorkflowNodesByID))
 
+	// grpWithAuth := r.router.Group("workflows", r.jwtMiddleware)
+	// grpWithAuth.Post("/", handler.WithAutoParse(r.handler.CreateWorkflow))
+	// grpWithAuth.Patch("/:id", handler.WithAutoParse(r.handler.UpdateWorkflowByID))
 }
 
 func (r *Router) SetupTask() {
-
+	// grp := r.router.Group("tasks")
+	// grp.Get("/:id", r.handler.GetTaskByID)
+	// grp.Get("/:id/records", r.handler.GetTaskRecordsByID)
 }
 
 func health(c *fiber.Ctx) error {
