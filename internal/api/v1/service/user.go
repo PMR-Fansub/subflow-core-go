@@ -10,11 +10,35 @@ import (
 	"subflow-core-go/internal/api/common"
 	"subflow-core-go/internal/api/constants"
 	"subflow-core-go/internal/api/v1/service/dto"
+	"subflow-core-go/internal/config"
 	"subflow-core-go/pkg/ent"
 	"subflow-core-go/pkg/ent/user"
 )
 
-func (s *Service) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
+type UserService interface {
+	FindUserByID(ctx context.Context, id int) (*ent.User, error)
+	FindUserByUsername(ctx context.Context, username string) (*ent.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*ent.User, error)
+	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error)
+	VerifyPwdByUsername(ctx context.Context, username string, password string) (*ent.User, error)
+	RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.User, t time.Time, ip string) error
+	UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error
+	GetTeamsOfUser(ctx context.Context, u *ent.User) (ent.Teams, error)
+}
+
+type UserServiceImpl struct {
+	db     *ent.Client
+	config *config.Config
+}
+
+func NewUserService(db *ent.Client, config *config.Config) UserService {
+	return &UserServiceImpl{
+		db,
+		config,
+	}
+}
+
+func (s *UserServiceImpl) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
 		Where(user.ID(id)).
@@ -28,7 +52,7 @@ func (s *Service) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
 	return u, err
 }
 
-func (s *Service) FindUserByUsername(ctx context.Context, username string) (*ent.User, error) {
+func (s *UserServiceImpl) FindUserByUsername(ctx context.Context, username string) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
 		Where(user.Username(username)).
@@ -42,7 +66,7 @@ func (s *Service) FindUserByUsername(ctx context.Context, username string) (*ent
 	return u, err
 }
 
-func (s *Service) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
+func (s *UserServiceImpl) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
 		Where(user.Email(email)).
@@ -56,7 +80,7 @@ func (s *Service) FindUserByEmail(ctx context.Context, email string) (*ent.User,
 	return u, err
 }
 
-func (s *Service) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
+func (s *UserServiceImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
 	if u, _ := s.FindUserByUsername(ctx, req.Username); u != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
@@ -90,7 +114,7 @@ func (s *Service) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*
 		Save(ctx)
 }
 
-func (s *Service) VerifyPwdByUsername(ctx context.Context, username string, pwd string) (*ent.User, error) {
+func (s *UserServiceImpl) VerifyPwdByUsername(ctx context.Context, username string, pwd string) (*ent.User, error) {
 	u, err := s.FindUserByUsername(ctx, username)
 	if err != nil {
 		return nil, err
@@ -105,14 +129,14 @@ func (s *Service) VerifyPwdByUsername(ctx context.Context, username string, pwd 
 	return u, nil
 }
 
-func (s *Service) RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.User, t time.Time, ip string) error {
+func (s *UserServiceImpl) RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.User, t time.Time, ip string) error {
 	return u.Update().
 		SetLastLoggedAt(t).
 		SetLoginIP(ip).
 		Exec(ctx)
 }
 
-func (s *Service) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error {
+func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error {
 	if len(req.Nickname) > 0 {
 		err := s.db.User.
 			UpdateOneID(req.ID).
@@ -132,7 +156,7 @@ func (s *Service) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error 
 	return nil
 }
 
-func (s *Service) GetTeamsOfUser(ctx context.Context, u *ent.User) (ent.Teams, error) {
+func (s *UserServiceImpl) GetTeamsOfUser(ctx context.Context, u *ent.User) (ent.Teams, error) {
 	t, err := u.
 		QueryTeams().
 		All(ctx)

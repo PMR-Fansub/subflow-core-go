@@ -41,7 +41,7 @@ func (h *Handler) GetCurrentUser(ctx *fiber.Ctx, req GetUserReq) (*dto.UserInfo,
 	if err != nil {
 		return nil, err
 	}
-	user, err := h.service.FindUserByID(ctx.Context(), claim.UID)
+	user, err := h.services.User.FindUserByID(ctx.Context(), claim.UID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (h *Handler) GetCurrentUser(ctx *fiber.Ctx, req GetUserReq) (*dto.UserInfo,
 //	@Success	200	{object}	common.APIResponse{data=dto.UserBasicInfo}
 //	@Router		/users/{id} [get]
 func (h *Handler) GetUserByID(ctx *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicInfo, error) {
-	user, err := h.service.FindUserByID(ctx.Context(), req.ID)
+	user, err := h.services.User.FindUserByID(ctx.Context(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (h *Handler) UpdateCurrentUser(ctx *fiber.Ctx, req UpdateCurUserReq) (*Upda
 	if err != nil {
 		return nil, err
 	}
-	err = h.service.UpdateUser(
+	err = h.services.User.UpdateUser(
 		ctx.Context(), &dto.UpdateUserReq{
 			ID:       claim.UID,
 			Nickname: req.Nickname,
@@ -104,7 +104,7 @@ func (h *Handler) UpdateCurrentUser(ctx *fiber.Ctx, req UpdateCurUserReq) (*Upda
 //	@Success	200		{object}	common.APIResponse{data=UpdateUserInfoResp}
 //	@Router		/users/{id} [patch]
 func (h *Handler) UpdateUser(ctx *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfoResp, error) {
-	err := h.service.UpdateUser(
+	err := h.services.User.UpdateUser(
 		ctx.Context(), &dto.UpdateUserReq{
 			ID:       req.ID,
 			Nickname: req.Nickname,
@@ -123,11 +123,11 @@ func (h *Handler) UpdateUser(ctx *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfo
 //	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
 //	@Router		/users/{id}/teams [get]
 func (h *Handler) GetUserTeamsByID(ctx *fiber.Ctx, req GetUserTeamsByIDReq) ([]*dto.TeamInfo, error) {
-	u, err := h.service.FindUserByID(ctx.Context(), req.UID)
+	u, err := h.services.User.FindUserByID(ctx.Context(), req.UID)
 	if err != nil {
 		return nil, err
 	}
-	ts, err := h.service.GetTeamsOfUser(ctx.Context(), u)
+	ts, err := h.services.User.GetTeamsOfUser(ctx.Context(), u)
 	if err != nil {
 		return nil, err
 	}

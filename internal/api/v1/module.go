@@ -8,12 +8,15 @@ import (
 	"subflow-core-go/internal/api/v1/service"
 )
 
-var Module = fx.Provide(
-	service.New,
-	handler.New,
-	helper.NewAdapter,
-	middleware.NewCasbinEnforcer,
-	middleware.NewCasbinMiddleware,
-	middleware.NewJwtMiddleware,
-	NewRouter,
+var Module = fx.Module(
+	"v1",
+	service.Module,
+	fx.Provide(
+		handler.New,
+		helper.NewAdapter,
+		middleware.NewCasbinEnforcer,
+		middleware.NewCasbinMiddleware,
+		middleware.NewJwtMiddleware,
+		NewRouter,
+	),
 )

@@ -17,7 +17,7 @@ func main() {
 		fx.Provide(datasource.NewEntClient),
 		fx.Provide(logger.New),
 		fx.Provide(api.New),
-		fx.Module("v1", v1.Module),
+		v1.Module,
 		fx.WithLogger(
 			func(log *zap.Logger) fxevent.Logger {
 				return &fxevent.ZapLogger{Logger: log}

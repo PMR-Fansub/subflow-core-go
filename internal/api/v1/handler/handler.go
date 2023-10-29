@@ -15,14 +15,14 @@ import (
 )
 
 type Handler struct {
-	service  *service.Service
+	services *service.Services
 	config   *config.Config
 	enforcer *casbin.Enforcer
 }
 
-func New(service *service.Service, cfg *config.Config, enforcer *casbin.Enforcer) *Handler {
+func New(services *service.Services, cfg *config.Config, enforcer *casbin.Enforcer) *Handler {
 	return &Handler{
-		service,
+		services,
 		cfg,
 		enforcer,
 	}

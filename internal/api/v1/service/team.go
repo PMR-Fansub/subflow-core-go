@@ -6,11 +6,36 @@ import (
 	"subflow-core-go/internal/api/common"
 	"subflow-core-go/internal/api/constants"
 	"subflow-core-go/internal/api/v1/service/dto"
+	"subflow-core-go/internal/config"
 	"subflow-core-go/pkg/ent"
 	"subflow-core-go/pkg/ent/team"
 )
 
-func (s *Service) FindTeamByID(ctx context.Context, id int) (*ent.Team, error) {
+type TeamService interface {
+	FindTeamByID(ctx context.Context, id int) (*ent.Team, error)
+	FindTeamByName(ctx context.Context, name string) (*ent.Team, error)
+	GetAllTeamsInfo(ctx context.Context) (ent.Teams, error)
+	GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error)
+	GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users, error)
+	GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks, error)
+	CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error)
+	UpdateTeamInfoByID(ctx context.Context, id int, info *dto.TeamInfo) (*ent.Team, error)
+	AddUsersForTeam(ctx context.Context, teamID int, u ...*ent.User) error
+}
+
+type TeamServiceImpl struct {
+	db     *ent.Client
+	config *config.Config
+}
+
+func NewTeamService(db *ent.Client, config *config.Config) TeamService {
+	return &TeamServiceImpl{
+		db,
+		config,
+	}
+}
+
+func (s *TeamServiceImpl) FindTeamByID(ctx context.Context, id int) (*ent.Team, error) {
 	t, err := s.db.Team.
 		Query().
 		Where(team.ID(id)).
@@ -24,7 +49,7 @@ func (s *Service) FindTeamByID(ctx context.Context, id int) (*ent.Team, error) {
 	return t, err
 }
 
-func (s *Service) FindTeamByName(ctx context.Context, name string) (*ent.Team, error) {
+func (s *TeamServiceImpl) FindTeamByName(ctx context.Context, name string) (*ent.Team, error) {
 	t, err := s.db.Team.
 		Query().
 		Where(team.Name(name)).
@@ -38,7 +63,7 @@ func (s *Service) FindTeamByName(ctx context.Context, name string) (*ent.Team, e
 	return t, err
 }
 
-func (s *Service) GetAllTeamsInfo(ctx context.Context) (ent.Teams, error) {
+func (s *TeamServiceImpl) GetAllTeamsInfo(ctx context.Context) (ent.Teams, error) {
 	teams, err := s.db.Team.
 		Query().
 		All(ctx)
@@ -48,7 +73,7 @@ func (s *Service) GetAllTeamsInfo(ctx context.Context) (ent.Teams, error) {
 	return teams, nil
 }
 
-func (s *Service) GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error) {
+func (s *TeamServiceImpl) GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error) {
 	t, err := s.FindTeamByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -56,7 +81,7 @@ func (s *Service) GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error
 	return t, nil
 }
 
-func (s *Service) GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users, error) {
+func (s *TeamServiceImpl) GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users, error) {
 	t, err := s.GetTeamInfoByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -70,7 +95,7 @@ func (s *Service) GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users,
 	return u, nil
 }
 
-func (s *Service) GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks, error) {
+func (s *TeamServiceImpl) GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks, error) {
 	t, err := s.GetTeamInfoByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -85,7 +110,7 @@ func (s *Service) GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks,
 	return tasks, nil
 }
 
-func (s *Service) CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error) {
+func (s *TeamServiceImpl) CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error) {
 	if t, _ := s.FindTeamByName(ctx, info.Name); t != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
@@ -102,7 +127,7 @@ func (s *Service) CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.T
 		Save(ctx)
 }
 
-func (s *Service) UpdateTeamInfoByID(ctx context.Context, id int, info *dto.TeamInfo) (*ent.Team, error) {
+func (s *TeamServiceImpl) UpdateTeamInfoByID(ctx context.Context, id int, info *dto.TeamInfo) (*ent.Team, error) {
 	t, err := s.FindTeamByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -116,7 +141,7 @@ func (s *Service) UpdateTeamInfoByID(ctx context.Context, id int, info *dto.Team
 		Save(ctx)
 }
 
-func (s *Service) AddUsersForTeam(ctx context.Context, teamID int, u ...*ent.User) error {
+func (s *TeamServiceImpl) AddUsersForTeam(ctx context.Context, teamID int, u ...*ent.User) error {
 	t, err := s.FindTeamByID(ctx, teamID)
 	if err != nil {
 		return err

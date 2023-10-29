@@ -37,7 +37,7 @@ type RegisterResponse struct{}
 //	@Router		/auth/register [post]
 func (h *Handler) Register(ctx *fiber.Ctx, req RegisterRequest) (*RegisterResponse, error) {
 	req.RemoteAddr = ctx.IP()
-	_, err := h.service.CreateUser(ctx.Context(), req.CreateUserRequest)
+	_, err := h.services.User.CreateUser(ctx.Context(), req.CreateUserRequest)
 	return nil, err
 }
 
@@ -53,12 +53,12 @@ func (h *Handler) Register(ctx *fiber.Ctx, req RegisterRequest) (*RegisterRespon
 func (h *Handler) Login(ctx *fiber.Ctx, req LoginRequest) (*LoginResponse, error) {
 	var resp LoginResponse
 
-	user, err := h.service.VerifyPwdByUsername(ctx.Context(), req.Username, req.Password)
+	user, err := h.services.User.VerifyPwdByUsername(ctx.Context(), req.Username, req.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.service.RefreshLastLoginTimeAndIP(ctx.Context(), user, time.Now(), ctx.IP())
+	err = h.services.User.RefreshLastLoginTimeAndIP(ctx.Context(), user, time.Now(), ctx.IP())
 	if err != nil {
 		return nil, err
 	}
