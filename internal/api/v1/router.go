@@ -53,55 +53,60 @@ func (r *Router) SetupHealthCheck() fiber.Router {
 }
 
 func (r *Router) SetupAuth() {
-	auth := r.router.Group("auth")
-	auth.Post("register", handler.WithAutoParse(r.handler.Register))
-	auth.Post("login", handler.WithAutoParse(r.handler.Login))
+	endpointName := "auth"
+	auth := r.router.Group(endpointName)
+	auth.Post("register", handler.Wrap(r.handler.Register))
+	auth.Post("login", handler.Wrap(r.handler.Login))
 }
 
 func (r *Router) SetupUser() {
-	grp := r.router.Group("users")
-	grp.Get("/:id", handler.WithAutoParse(r.handler.GetUserByID))
-	grp.Get("/:id/teams", handler.WithAutoParse(r.handler.GetUserTeamsByID))
+	endpointName := "users"
+	grp := r.router.Group(endpointName)
+	grp.Get("/:id", handler.Wrap(r.handler.GetUserByID))
+	grp.Get("/:id/teams", handler.Wrap(r.handler.GetUserTeamsByID))
 
-	grpWithAuth := r.router.Group("users", r.jwtMiddleware)
-	grpWithAuth.Get("/", handler.WithAutoParse(r.handler.GetCurrentUser))
-	grpWithAuth.Patch("/", handler.WithAutoParse(r.handler.UpdateCurrentUser))
+	grpWithAuth := r.router.Group(endpointName, r.jwtMiddleware)
+	grpWithAuth.Get("/", handler.Wrap(r.handler.GetCurrentUser))
+	grpWithAuth.Patch("/", handler.Wrap(r.handler.UpdateCurrentUser))
 	grpWithAuth.Patch(
 		"/:id",
 		r.casbinMiddleware.RequiresRoles(
 			[]string{constants.RoleNameAdmin, constants.RoleNameSuperuser},
 			casbinware.WithValidationRule(casbinware.AtLeastOneRule),
 		),
-		handler.WithAutoParse(r.handler.UpdateUser),
+		handler.Wrap(r.handler.UpdateUser),
 	)
 }
 
 func (r *Router) SetupTeam() {
-	grp := r.router.Group("teams")
-	grp.Get("/", handler.WithAutoParse(r.handler.GetAllTeams))
-	grp.Get("/:id", handler.WithAutoParse(r.handler.GetTeamByID))
-	grp.Get("/:id/users", handler.WithAutoParse(r.handler.GetTeamUsersByID))
-	grp.Get("/:id/tasks", handler.WithAutoParse(r.handler.GetTeamTasksByID))
+	endpointName := "teams"
+	grp := r.router.Group(endpointName)
+	grp.Get("/", handler.Wrap(r.handler.GetAllTeams))
+	grp.Get("/:id", handler.Wrap(r.handler.GetTeamByID))
+	grp.Get("/:id/users", handler.Wrap(r.handler.GetTeamUsersByID))
+	grp.Get("/:id/tasks", handler.Wrap(r.handler.GetTeamTasksByID))
 
-	grpWithAuth := r.router.Group("teams", r.jwtMiddleware)
-	grpWithAuth.Post("/", handler.WithAutoParse(r.handler.CreateNewTeam))          // TODO: more access control
-	grpWithAuth.Patch("/:id", handler.WithAutoParse(r.handler.UpdateTeamInfoByID)) // TODO: more access control
-	grpWithAuth.Post("/:id/users", handler.WithAutoParse(r.handler.AddUserToTeam)) // TODO: more access control
+	grpWithAuth := r.router.Group(endpointName, r.jwtMiddleware)
+	grpWithAuth.Post("/", handler.Wrap(r.handler.CreateNewTeam))          // TODO: more access control
+	grpWithAuth.Patch("/:id", handler.Wrap(r.handler.UpdateTeamInfoByID)) // TODO: more access control
+	grpWithAuth.Post("/:id/users", handler.Wrap(r.handler.AddUserToTeam)) // TODO: more access control
 }
 
 func (r *Router) SetupWorkFlow() {
-	// grp := r.router.Group("workflows")
-	// grp.Get("/", handler.WithAutoParse(r.handler.GetAllWorkflows))
-	// grp.Get("/:id", handler.WithAutoParse(r.handler.GetWorkflowByID))
-	// grp.Get("/:id/nodes", handler.WithAutoParse(r.handler.GetWorkflowNodesByID))
+	// endpointName := "workflows"
+	// grp := r.router.Group(endpointName)
+	// grp.Get("/", handler.Wrap(r.handler.GetAllWorkflows))
+	// grp.Get("/:id", handler.Wrap(r.handler.GetWorkflowByID))
+	// grp.Get("/:id/nodes", handler.Wrap(r.handler.GetWorkflowNodesByID))
 
-	// grpWithAuth := r.router.Group("workflows", r.jwtMiddleware)
-	// grpWithAuth.Post("/", handler.WithAutoParse(r.handler.CreateWorkflow))
-	// grpWithAuth.Patch("/:id", handler.WithAutoParse(r.handler.UpdateWorkflowByID))
+	// grpWithAuth := r.router.Group(endpointName, r.jwtMiddleware)
+	// grpWithAuth.Post("/", handler.Wrap(r.handler.CreateWorkflow))
+	// grpWithAuth.Patch("/:id", handler.Wrap(r.handler.UpdateWorkflowByID))
 }
 
 func (r *Router) SetupTask() {
-	// grp := r.router.Group("tasks")
+	// endpointName := "tasks"
+	// grp := r.router.Group(endpointName)
 	// grp.Get("/:id", r.handler.GetTaskByID)
 	// grp.Get("/:id/records", r.handler.GetTaskRecordsByID)
 }

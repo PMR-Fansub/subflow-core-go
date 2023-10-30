@@ -28,7 +28,7 @@ func New(services *service.Services, cfg *config.Config, enforcer *casbin.Enforc
 	}
 }
 
-func WithAutoParse[Request any, Response any](handle func(*fiber.Ctx, Request) (Response, error)) fiber.Handler {
+func Wrap[Request any, Response any](handle func(*fiber.Ctx, Request) (Response, error)) fiber.Handler {
 	validate := validator.New()
 
 	return func(ctx *fiber.Ctx) error {
