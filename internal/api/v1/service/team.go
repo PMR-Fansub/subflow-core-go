@@ -12,10 +12,9 @@ import (
 )
 
 type TeamService interface {
-	FindTeamByID(ctx context.Context, id int) (*ent.Team, error)
-	FindTeamByName(ctx context.Context, name string) (*ent.Team, error)
+	GetTeamByID(ctx context.Context, id int) (*ent.Team, error)
+	GetTeamByName(ctx context.Context, name string) (*ent.Team, error)
 	GetAllTeamsInfo(ctx context.Context) (ent.Teams, error)
-	GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error)
 	GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users, error)
 	GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks, error)
 	CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error)
@@ -35,7 +34,7 @@ func NewTeamService(db *ent.Client, config *config.Config) TeamService {
 	}
 }
 
-func (s *TeamServiceImpl) FindTeamByID(ctx context.Context, id int) (*ent.Team, error) {
+func (s *TeamServiceImpl) GetTeamByID(ctx context.Context, id int) (*ent.Team, error) {
 	t, err := s.db.Team.
 		Query().
 		Where(team.ID(id)).
@@ -49,7 +48,7 @@ func (s *TeamServiceImpl) FindTeamByID(ctx context.Context, id int) (*ent.Team, 
 	return t, err
 }
 
-func (s *TeamServiceImpl) FindTeamByName(ctx context.Context, name string) (*ent.Team, error) {
+func (s *TeamServiceImpl) GetTeamByName(ctx context.Context, name string) (*ent.Team, error) {
 	t, err := s.db.Team.
 		Query().
 		Where(team.Name(name)).
@@ -73,16 +72,8 @@ func (s *TeamServiceImpl) GetAllTeamsInfo(ctx context.Context) (ent.Teams, error
 	return teams, nil
 }
 
-func (s *TeamServiceImpl) GetTeamInfoByID(ctx context.Context, id int) (*ent.Team, error) {
-	t, err := s.FindTeamByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return t, nil
-}
-
 func (s *TeamServiceImpl) GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users, error) {
-	t, err := s.GetTeamInfoByID(ctx, id)
+	t, err := s.GetTeamByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +87,7 @@ func (s *TeamServiceImpl) GetAllUsersOfTeamByID(ctx context.Context, id int) (en
 }
 
 func (s *TeamServiceImpl) GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks, error) {
-	t, err := s.GetTeamInfoByID(ctx, id)
+	t, err := s.GetTeamByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +102,7 @@ func (s *TeamServiceImpl) GetAllTasksOfTeamByID(ctx context.Context, id int) (en
 }
 
 func (s *TeamServiceImpl) CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error) {
-	if t, _ := s.FindTeamByName(ctx, info.Name); t != nil {
+	if t, _ := s.GetTeamByName(ctx, info.Name); t != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
 			Message: "团队名称已被使用",
@@ -128,7 +119,7 @@ func (s *TeamServiceImpl) CreateNewTeam(ctx context.Context, info *dto.TeamInfo)
 }
 
 func (s *TeamServiceImpl) UpdateTeamInfoByID(ctx context.Context, id int, info *dto.TeamInfo) (*ent.Team, error) {
-	t, err := s.FindTeamByID(ctx, id)
+	t, err := s.GetTeamByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +133,7 @@ func (s *TeamServiceImpl) UpdateTeamInfoByID(ctx context.Context, id int, info *
 }
 
 func (s *TeamServiceImpl) AddUsersForTeam(ctx context.Context, teamID int, u ...*ent.User) error {
-	t, err := s.FindTeamByID(ctx, teamID)
+	t, err := s.GetTeamByID(ctx, teamID)
 	if err != nil {
 		return err
 	}

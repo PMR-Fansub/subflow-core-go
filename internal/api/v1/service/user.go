@@ -16,9 +16,9 @@ import (
 )
 
 type UserService interface {
-	FindUserByID(ctx context.Context, id int) (*ent.User, error)
-	FindUserByUsername(ctx context.Context, username string) (*ent.User, error)
-	FindUserByEmail(ctx context.Context, email string) (*ent.User, error)
+	GetUserByID(ctx context.Context, id int) (*ent.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*ent.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*ent.User, error)
 	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error)
 	VerifyPwdByUsername(ctx context.Context, username string, password string) (*ent.User, error)
 	RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.User, t time.Time, ip string) error
@@ -38,7 +38,7 @@ func NewUserService(db *ent.Client, config *config.Config) UserService {
 	}
 }
 
-func (s *UserServiceImpl) FindUserByID(ctx context.Context, id int) (*ent.User, error) {
+func (s *UserServiceImpl) GetUserByID(ctx context.Context, id int) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
 		Where(user.ID(id)).
@@ -52,7 +52,7 @@ func (s *UserServiceImpl) FindUserByID(ctx context.Context, id int) (*ent.User, 
 	return u, err
 }
 
-func (s *UserServiceImpl) FindUserByUsername(ctx context.Context, username string) (*ent.User, error) {
+func (s *UserServiceImpl) GetUserByUsername(ctx context.Context, username string) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
 		Where(user.Username(username)).
@@ -66,7 +66,7 @@ func (s *UserServiceImpl) FindUserByUsername(ctx context.Context, username strin
 	return u, err
 }
 
-func (s *UserServiceImpl) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
+func (s *UserServiceImpl) GetUserByEmail(ctx context.Context, email string) (*ent.User, error) {
 	u, err := s.db.User.
 		Query().
 		Where(user.Email(email)).
@@ -81,13 +81,13 @@ func (s *UserServiceImpl) FindUserByEmail(ctx context.Context, email string) (*e
 }
 
 func (s *UserServiceImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
-	if u, _ := s.FindUserByUsername(ctx, req.Username); u != nil {
+	if u, _ := s.GetUserByUsername(ctx, req.Username); u != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
 			Message: "用户名已存在",
 		}
 	}
-	if u, _ := s.FindUserByEmail(ctx, req.Email); u != nil {
+	if u, _ := s.GetUserByEmail(ctx, req.Email); u != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
 			Message: "邮箱已被使用",
@@ -115,7 +115,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *dto.CreateUserReq
 }
 
 func (s *UserServiceImpl) VerifyPwdByUsername(ctx context.Context, username string, pwd string) (*ent.User, error) {
-	u, err := s.FindUserByUsername(ctx, username)
+	u, err := s.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}

@@ -69,7 +69,7 @@ func (h *Handler) GetAllTeams(ctx *fiber.Ctx, _ GetAllTeamsReq) ([]*dto.TeamInfo
 //	@Success	200	{object}	common.APIResponse{data=dto.TeamInfo}
 //	@Router		/teams/{id} [get]
 func (h *Handler) GetTeamByID(ctx *fiber.Ctx, req GetTeamByIDReq) (*dto.TeamInfo, error) {
-	t, err := h.services.Team.GetTeamInfoByID(ctx.Context(), req.ID)
+	t, err := h.services.Team.GetTeamByID(ctx.Context(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.Te
 //	@Success	200		{object}	common.APIResponse{data=AddUserToTeamResp}
 //	@Router		/teams/{id}/users [post]
 func (h *Handler) AddUserToTeam(ctx *fiber.Ctx, req AddUserToTeamReq) (*AddUserToTeamResp, error) {
-	u, err := h.services.User.FindUserByID(ctx.Context(), req.UID)
+	u, err := h.services.User.GetUserByID(ctx.Context(), req.UID)
 	if err != nil {
 		return nil, err
 	}

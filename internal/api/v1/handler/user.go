@@ -41,7 +41,7 @@ func (h *Handler) GetCurrentUser(ctx *fiber.Ctx, req GetUserReq) (*dto.UserInfo,
 	if err != nil {
 		return nil, err
 	}
-	user, err := h.services.User.FindUserByID(ctx.Context(), claim.UID)
+	user, err := h.services.User.GetUserByID(ctx.Context(), claim.UID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (h *Handler) GetCurrentUser(ctx *fiber.Ctx, req GetUserReq) (*dto.UserInfo,
 //	@Success	200	{object}	common.APIResponse{data=dto.UserBasicInfo}
 //	@Router		/users/{id} [get]
 func (h *Handler) GetUserByID(ctx *fiber.Ctx, req GetUserByIDReq) (*dto.UserBasicInfo, error) {
-	user, err := h.services.User.FindUserByID(ctx.Context(), req.ID)
+	user, err := h.services.User.GetUserByID(ctx.Context(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (h *Handler) UpdateUser(ctx *fiber.Ctx, req UpdateUserReq) (*UpdateUserInfo
 //	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
 //	@Router		/users/{id}/teams [get]
 func (h *Handler) GetUserTeamsByID(ctx *fiber.Ctx, req GetUserTeamsByIDReq) ([]*dto.TeamInfo, error) {
-	u, err := h.services.User.FindUserByID(ctx.Context(), req.UID)
+	u, err := h.services.User.GetUserByID(ctx.Context(), req.UID)
 	if err != nil {
 		return nil, err
 	}
