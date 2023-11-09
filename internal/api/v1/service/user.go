@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"subflow-core-go/internal/api/common"
 	"subflow-core-go/internal/api/constants"
-	"subflow-core-go/internal/api/v1/service/dto"
+	"subflow-core-go/internal/api/v1/dto"
 	"subflow-core-go/internal/config"
 	"subflow-core-go/pkg/ent"
 	"subflow-core-go/pkg/ent/user"
@@ -19,10 +19,10 @@ type UserService interface {
 	GetUserByID(ctx context.Context, id int) (*ent.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*ent.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*ent.User, error)
-	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error)
+	CreateUser(ctx context.Context, req dto.CreateUserRequest) (*ent.User, error)
 	VerifyPwdByUsername(ctx context.Context, username string, password string) (*ent.User, error)
 	RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.User, t time.Time, ip string) error
-	UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error
+	UpdateUser(ctx context.Context, req dto.UpdateUserReq) error
 	GetTeamsOfUser(ctx context.Context, u *ent.User) (ent.Teams, error)
 }
 
@@ -80,7 +80,7 @@ func (s *UserServiceImpl) GetUserByEmail(ctx context.Context, email string) (*en
 	return u, err
 }
 
-func (s *UserServiceImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*ent.User, error) {
+func (s *UserServiceImpl) CreateUser(ctx context.Context, req dto.CreateUserRequest) (*ent.User, error) {
 	if u, _ := s.GetUserByUsername(ctx, req.Username); u != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
@@ -136,7 +136,7 @@ func (s *UserServiceImpl) RefreshLastLoginTimeAndIP(ctx context.Context, u *ent.
 		Exec(ctx)
 }
 
-func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *dto.UpdateUserReq) error {
+func (s *UserServiceImpl) UpdateUser(ctx context.Context, req dto.UpdateUserReq) error {
 	if len(req.Nickname) > 0 {
 		err := s.db.User.
 			UpdateOneID(req.ID).

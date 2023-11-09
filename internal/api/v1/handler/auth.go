@@ -6,11 +6,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"subflow-core-go/internal/api/helper"
-	"subflow-core-go/internal/api/v1/service/dto"
+	"subflow-core-go/internal/api/v1/dto"
 )
 
 type RegisterRequest struct {
-	*dto.CreateUserRequest
+	dto.CreateUserRequest
 }
 
 type LoginRequest struct {
@@ -20,8 +20,8 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token    string             `json:"token"`
-	UserInfo *dto.UserBasicInfo `json:"userInfo"`
+	Token    string            `json:"token"`
+	UserInfo dto.UserBasicInfo `json:"userInfo"`
 }
 
 type RegisterResponse struct{}
@@ -35,10 +35,10 @@ type RegisterResponse struct{}
 //	@Param		message	body		RegisterRequest	true	"user info to create"
 //	@Success	200		{object}	common.APIResponse{data=RegisterResponse}
 //	@Router		/auth/register [post]
-func (h *Handler) Register(ctx *fiber.Ctx, req RegisterRequest) (*RegisterResponse, error) {
+func (h *Handler) Register(ctx *fiber.Ctx, req RegisterRequest) (res RegisterResponse, err error) {
 	req.RemoteAddr = ctx.IP()
-	_, err := h.services.User.CreateUser(ctx.Context(), req.CreateUserRequest)
-	return nil, err
+	_, err = h.services.User.CreateUser(ctx.Context(), req.CreateUserRequest)
+	return
 }
 
 // Login godoc
@@ -50,17 +50,15 @@ func (h *Handler) Register(ctx *fiber.Ctx, req RegisterRequest) (*RegisterRespon
 //	@Param		message	body		LoginRequest	true	"login form"
 //	@Success	200		{object}	common.APIResponse{data=LoginResponse}
 //	@Router		/auth/login [post]
-func (h *Handler) Login(ctx *fiber.Ctx, req LoginRequest) (*LoginResponse, error) {
-	var resp LoginResponse
-
+func (h *Handler) Login(ctx *fiber.Ctx, req LoginRequest) (res LoginResponse, err error) {
 	user, err := h.services.User.VerifyPwdByUsername(ctx.Context(), req.Username, req.Password)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = h.services.User.RefreshLastLoginTimeAndIP(ctx.Context(), user, time.Now(), ctx.IP())
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	token, err := helper.SignJWT(
@@ -73,11 +71,11 @@ func (h *Handler) Login(ctx *fiber.Ctx, req LoginRequest) (*LoginResponse, error
 		},
 	)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	resp.Token = token
-	resp.UserInfo = dto.GetBasicInfoFromUser(user)
+	res.Token = token
+	res.UserInfo = dto.GetBasicInfoFromUser(user)
 
 	if req.WithCookie {
 		ctx.Cookie(
@@ -89,6 +87,5 @@ func (h *Handler) Login(ctx *fiber.Ctx, req LoginRequest) (*LoginResponse, error
 			},
 		)
 	}
-
-	return &resp, nil
+	return
 }

@@ -5,7 +5,7 @@ import (
 
 	"subflow-core-go/internal/api/common"
 	"subflow-core-go/internal/api/constants"
-	"subflow-core-go/internal/api/v1/service/dto"
+	"subflow-core-go/internal/api/v1/dto"
 	"subflow-core-go/internal/config"
 	"subflow-core-go/pkg/ent"
 	"subflow-core-go/pkg/ent/team"
@@ -14,11 +14,11 @@ import (
 type TeamService interface {
 	GetTeamByID(ctx context.Context, id int) (*ent.Team, error)
 	GetTeamByName(ctx context.Context, name string) (*ent.Team, error)
-	GetAllTeamsInfo(ctx context.Context) (ent.Teams, error)
+	GetAllTeams(ctx context.Context) (ent.Teams, error)
 	GetAllUsersOfTeamByID(ctx context.Context, id int) (ent.Users, error)
 	GetAllTasksOfTeamByID(ctx context.Context, id int) (ent.Tasks, error)
-	CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error)
-	UpdateTeamInfoByID(ctx context.Context, id int, info *dto.TeamInfo) (*ent.Team, error)
+	CreateNewTeam(ctx context.Context, info dto.TeamInfo) (*ent.Team, error)
+	UpdateTeamByID(ctx context.Context, id int, info dto.TeamInfo) (*ent.Team, error)
 	AddUsersForTeam(ctx context.Context, teamID int, u ...*ent.User) error
 }
 
@@ -62,7 +62,7 @@ func (s *TeamServiceImpl) GetTeamByName(ctx context.Context, name string) (*ent.
 	return t, err
 }
 
-func (s *TeamServiceImpl) GetAllTeamsInfo(ctx context.Context) (ent.Teams, error) {
+func (s *TeamServiceImpl) GetAllTeams(ctx context.Context) (ent.Teams, error) {
 	teams, err := s.db.Team.
 		Query().
 		All(ctx)
@@ -101,7 +101,7 @@ func (s *TeamServiceImpl) GetAllTasksOfTeamByID(ctx context.Context, id int) (en
 	return tasks, nil
 }
 
-func (s *TeamServiceImpl) CreateNewTeam(ctx context.Context, info *dto.TeamInfo) (*ent.Team, error) {
+func (s *TeamServiceImpl) CreateNewTeam(ctx context.Context, info dto.TeamInfo) (*ent.Team, error) {
 	if t, _ := s.GetTeamByName(ctx, info.Name); t != nil {
 		return nil, &common.BusinessError{
 			Code:    common.ResultCreationFailed,
@@ -118,7 +118,7 @@ func (s *TeamServiceImpl) CreateNewTeam(ctx context.Context, info *dto.TeamInfo)
 		Save(ctx)
 }
 
-func (s *TeamServiceImpl) UpdateTeamInfoByID(ctx context.Context, id int, info *dto.TeamInfo) (*ent.Team, error) {
+func (s *TeamServiceImpl) UpdateTeamByID(ctx context.Context, id int, info dto.TeamInfo) (*ent.Team, error) {
 	t, err := s.GetTeamByID(ctx, id)
 	if err != nil {
 		return nil, err

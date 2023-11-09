@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"subflow-core-go/internal/api/v1/service/dto"
+	"subflow-core-go/internal/api/v1/dto"
 )
 
 type GetAllTeamsReq struct{}
@@ -51,12 +51,13 @@ type AddUserToTeamResp struct {
 //	@Produce	json
 //	@Success	200	{object}	common.APIResponse{data=[]dto.TeamInfo}
 //	@Router		/teams [get]
-func (h *Handler) GetAllTeams(ctx *fiber.Ctx, _ GetAllTeamsReq) ([]*dto.TeamInfo, error) {
-	teams, err := h.services.Team.GetAllTeamsInfo(ctx.Context())
+func (h *Handler) GetAllTeams(ctx *fiber.Ctx, _ GetAllTeamsReq) (res []dto.TeamInfo, err error) {
+	teams, err := h.services.Team.GetAllTeams(ctx.Context())
 	if err != nil {
-		return nil, err
+		return
 	}
-	return dto.GetTeamInfoFromEntities(teams), err
+	res = dto.GetTeamInfoFromEntities(teams)
+	return
 }
 
 // GetTeamByID godoc
@@ -68,12 +69,13 @@ func (h *Handler) GetAllTeams(ctx *fiber.Ctx, _ GetAllTeamsReq) ([]*dto.TeamInfo
 //	@Param		id	path		int	true	"team id"
 //	@Success	200	{object}	common.APIResponse{data=dto.TeamInfo}
 //	@Router		/teams/{id} [get]
-func (h *Handler) GetTeamByID(ctx *fiber.Ctx, req GetTeamByIDReq) (*dto.TeamInfo, error) {
+func (h *Handler) GetTeamByID(ctx *fiber.Ctx, req GetTeamByIDReq) (res dto.TeamInfo, err error) {
 	t, err := h.services.Team.GetTeamByID(ctx.Context(), req.ID)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return dto.GetTeamInfoFromEntity(t), nil
+	res = dto.GetTeamInfoFromEntity(t)
+	return
 }
 
 // GetTeamUsersByID godoc
@@ -85,12 +87,13 @@ func (h *Handler) GetTeamByID(ctx *fiber.Ctx, req GetTeamByIDReq) (*dto.TeamInfo
 //	@Param		id	path		int	true	"team id"
 //	@Success	200	{object}	common.APIResponse{data=[]dto.UserBasicInfo}
 //	@Router		/teams/{id}/users [get]
-func (h *Handler) GetTeamUsersByID(ctx *fiber.Ctx, req GetTeamUsersByIDReq) ([]*dto.UserBasicInfo, error) {
+func (h *Handler) GetTeamUsersByID(ctx *fiber.Ctx, req GetTeamUsersByIDReq) (res []dto.UserBasicInfo, err error) {
 	us, err := h.services.Team.GetAllUsersOfTeamByID(ctx.Context(), req.ID)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return dto.GetBasicInfoFromUsers(us), nil
+	res = dto.GetBasicInfoFromUsers(us)
+	return
 }
 
 // GetTeamTasksByID godoc
@@ -102,12 +105,13 @@ func (h *Handler) GetTeamUsersByID(ctx *fiber.Ctx, req GetTeamUsersByIDReq) ([]*
 //	@Param		id	path		int	true	"team id"
 //	@Success	200	{object}	common.APIResponse{data=[]dto.TaskInfo}
 //	@Router		/teams/{id}/tasks [get]
-func (h *Handler) GetTeamTasksByID(ctx *fiber.Ctx, req GetTeamTasksByIDReq) ([]*dto.TaskInfo, error) {
+func (h *Handler) GetTeamTasksByID(ctx *fiber.Ctx, req GetTeamTasksByIDReq) (res []dto.TaskInfo, err error) {
 	tasks, err := h.services.Team.GetAllTasksOfTeamByID(ctx.Context(), req.ID)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return dto.GetTaskInfoFromEntities(tasks), nil
+	res = dto.GetTaskInfoFromEntities(tasks)
+	return
 }
 
 // CreateNewTeam godoc
@@ -119,9 +123,9 @@ func (h *Handler) GetTeamTasksByID(ctx *fiber.Ctx, req GetTeamTasksByIDReq) ([]*
 //	@Param		message	body		CreateNewTeamReq	true	"new team info"
 //	@Success	200		{object}	common.APIResponse{data=dto.TeamInfo}
 //	@Router		/teams [post]
-func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (*dto.TeamInfo, error) {
+func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (res dto.TeamInfo, err error) {
 	t, err := h.services.Team.CreateNewTeam(
-		ctx.Context(), &dto.TeamInfo{
+		ctx.Context(), dto.TeamInfo{
 			Name:    req.Name,
 			QQGroup: req.QQGroup,
 			Logo:    req.Logo,
@@ -129,9 +133,10 @@ func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (*dto.Team
 		},
 	)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return dto.GetTeamInfoFromEntity(t), nil
+	res = dto.GetTeamInfoFromEntity(t)
+	return
 }
 
 // UpdateTeamInfoByID godoc
@@ -144,9 +149,9 @@ func (h *Handler) CreateNewTeam(ctx *fiber.Ctx, req CreateNewTeamReq) (*dto.Team
 //	@Param		message	body		UpdateTeamReq	true	"team info"
 //	@Success	200		{object}	common.APIResponse{data=dto.TeamInfo}
 //	@Router		/teams/{id} [patch]
-func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.TeamInfo, error) {
-	t, err := h.services.Team.UpdateTeamInfoByID(
-		ctx.Context(), req.ID, &dto.TeamInfo{
+func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (res dto.TeamInfo, err error) {
+	t, err := h.services.Team.UpdateTeamByID(
+		ctx.Context(), req.ID, dto.TeamInfo{
 			Name:    req.Name,
 			Status:  req.Status,
 			QQGroup: req.QQGroup,
@@ -155,9 +160,10 @@ func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.Te
 		},
 	)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return dto.GetTeamInfoFromEntity(t), nil
+	res = dto.GetTeamInfoFromEntity(t)
+	return
 }
 
 // AddUserToTeam godoc
@@ -170,14 +176,14 @@ func (h *Handler) UpdateTeamInfoByID(ctx *fiber.Ctx, req UpdateTeamReq) (*dto.Te
 //	@Param		message	body		AddUserToTeamReq	true	"user info"
 //	@Success	200		{object}	common.APIResponse{data=AddUserToTeamResp}
 //	@Router		/teams/{id}/users [post]
-func (h *Handler) AddUserToTeam(ctx *fiber.Ctx, req AddUserToTeamReq) (*AddUserToTeamResp, error) {
+func (h *Handler) AddUserToTeam(ctx *fiber.Ctx, req AddUserToTeamReq) (res AddUserToTeamResp, err error) {
 	u, err := h.services.User.GetUserByID(ctx.Context(), req.UID)
 	if err != nil {
-		return nil, err
+		return
 	}
 	err = h.services.Team.AddUsersForTeam(ctx.Context(), req.ID, u)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return nil, nil
+	return
 }
