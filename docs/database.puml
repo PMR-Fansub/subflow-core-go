@@ -67,6 +67,8 @@ entity TaskTag {
   ---
   * name : text
   desc : text
+  ---
+  * team_id : number <<FK>>
 }
 
 entity Workflow {
@@ -75,6 +77,8 @@ entity Workflow {
   * name : text
   * type : number
   desc : text
+  ---
+  * team_id : number <<FK>>
 }
 
 entity WorkflowNode {
@@ -92,11 +96,14 @@ User }|--o{ Role
 User }|--o{ Team
 
 Workflow ||--|{ WorkflowNode
+Workflow }|--|| Team
 
 Task ||--o{ TaskRecord
 Task }|--|| Workflow
 Task }|--|| Team
 Task }|--o{ TaskTag
+
+TaskTag }|--|| Team
 
 TaskRecord }|--|{ User
 TaskRecord }|--|{ WorkflowNode
