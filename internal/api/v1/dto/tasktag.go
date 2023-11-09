@@ -8,16 +8,16 @@ type TaskTagInfo struct {
 	Desc string `json:"desc"`
 }
 
-func GetTaskTagInfoFromEntity(t *ent.TaskTag) *TaskTagInfo {
-	return &TaskTagInfo{
+func GetTaskTagInfoFromEntity(t *ent.TaskTag) TaskTagInfo {
+	return TaskTagInfo{
 		ID:   t.ID,
 		Name: t.Name,
 		Desc: t.Desc,
 	}
 }
 
-func GetTaskTagInfoFromEntities(ts ent.TaskTags) []*TaskTagInfo {
-	infos := make([]*TaskTagInfo, len(ts))
+func GetTaskTagInfoFromEntities(ts ent.TaskTags) []TaskTagInfo {
+	infos := make([]TaskTagInfo, len(ts))
 	for i, t := range ts {
 		infos[i] = GetTaskTagInfoFromEntity(t)
 	}

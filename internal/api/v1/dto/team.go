@@ -11,16 +11,16 @@ type TeamInfo struct {
 	Desc    string `json:"desc"`
 }
 
-func GetTeamInfoFromEntities(ts []*ent.Team) []*TeamInfo {
-	teamInfos := make([]*TeamInfo, len(ts))
+func GetTeamInfoFromEntities(ts []*ent.Team) []TeamInfo {
+	teamInfos := make([]TeamInfo, len(ts))
 	for i, t := range ts {
 		teamInfos[i] = GetTeamInfoFromEntity(t)
 	}
 	return teamInfos
 }
 
-func GetTeamInfoFromEntity(t *ent.Team) *TeamInfo {
-	return &TeamInfo{
+func GetTeamInfoFromEntity(t *ent.Team) TeamInfo {
+	return TeamInfo{
 		ID:      t.ID,
 		Name:    t.Name,
 		Status:  t.Status,

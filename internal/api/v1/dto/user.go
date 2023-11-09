@@ -26,18 +26,15 @@ type UserBasicInfo struct {
 }
 
 type UserInfo struct {
-	*UserBasicInfo
-	RegisterTime *time.Time `json:"registerTime"`
-	RegisterIP   string     `json:"registerIP"`
-	LoginTime    *time.Time `json:"loginTime"`
-	LoginIP      string     `json:"loginIP"`
+	UserBasicInfo
+	RegisterTime time.Time `json:"registerTime"`
+	RegisterIP   string    `json:"registerIP"`
+	LoginTime    time.Time `json:"loginTime"`
+	LoginIP      string    `json:"loginIP"`
 }
 
-func GetBasicInfoFromUser(u *ent.User) *UserBasicInfo {
-	if u == nil {
-		return nil
-	}
-	return &UserBasicInfo{
+func GetBasicInfoFromUser(u *ent.User) UserBasicInfo {
+	return UserBasicInfo{
 		ID:       u.ID,
 		Username: u.Username,
 		Nickname: u.Nickname,
@@ -45,23 +42,20 @@ func GetBasicInfoFromUser(u *ent.User) *UserBasicInfo {
 	}
 }
 
-func GetBasicInfoFromUsers(us []*ent.User) []*UserBasicInfo {
-	infos := make([]*UserBasicInfo, len(us))
+func GetBasicInfoFromUsers(us ent.Users) []UserBasicInfo {
+	infos := make([]UserBasicInfo, len(us))
 	for i, u := range us {
 		infos[i] = GetBasicInfoFromUser(u)
 	}
 	return infos
 }
 
-func GetInfoFromUser(u *ent.User) *UserInfo {
-	if u == nil {
-		return nil
-	}
-	return &UserInfo{
+func GetInfoFromUser(u *ent.User) UserInfo {
+	return UserInfo{
 		UserBasicInfo: GetBasicInfoFromUser(u),
-		RegisterTime:  &u.RegisteredAt,
+		RegisterTime:  u.RegisteredAt,
 		RegisterIP:    u.RegisterIP,
-		LoginTime:     &u.LastLoggedAt,
+		LoginTime:     u.LastLoggedAt,
 		LoginIP:       u.LoginIP,
 	}
 }
