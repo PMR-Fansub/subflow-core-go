@@ -15,7 +15,7 @@ import (
 	"subflow-core-go/internal/config"
 )
 
-func NewCasbinEnforcer(cfg *config.Config, a *helper.CasbinAdapter) (*casbin.Enforcer, error) {
+func NewCasbinEnforcer(_ *config.Config, a *helper.CasbinAdapter) (*casbin.Enforcer, error) {
 	enforcer, err := casbin.NewEnforcer("config/casbin_model.conf", a)
 	if err != nil {
 		return nil, err

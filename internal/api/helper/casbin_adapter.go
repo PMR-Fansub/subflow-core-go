@@ -59,11 +59,11 @@ func (a *CasbinAdapter) LoadPolicy(model model.Model) error {
 	return nil
 }
 
-func (a *CasbinAdapter) SavePolicy(model model.Model) error {
+func (a *CasbinAdapter) SavePolicy(_ model.Model) error {
 	return nil
 }
 
-func (a *CasbinAdapter) AddPolicy(sec string, ptype string, rule []string) error {
+func (a *CasbinAdapter) AddPolicy(_ string, ptype string, rule []string) error {
 	if ptype != "g" || len(rule) < 2 {
 		return errors.New("invalid parameters")
 	}
@@ -97,7 +97,7 @@ func (a *CasbinAdapter) AddPolicy(sec string, ptype string, rule []string) error
 }
 
 // RemovePolicy 从持久层删除单条policy规则
-func (a *CasbinAdapter) RemovePolicy(sec string, ptype string, rule []string) error {
+func (a *CasbinAdapter) RemovePolicy(_ string, ptype string, rule []string) error {
 	if ptype != "g" || len(rule) < 2 {
 		return errors.New("invalid parameters")
 	}
@@ -133,6 +133,6 @@ func (a *CasbinAdapter) RemovePolicy(sec string, ptype string, rule []string) er
 }
 
 // RemoveFilteredPolicy 从持久层删除符合筛选条件的policy规则
-func (a *CasbinAdapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int, fieldValues ...string) error {
+func (a *CasbinAdapter) RemoveFilteredPolicy(_ string, _ string, _ int, _ ...string) error {
 	return errors.New("not implemented")
 }
