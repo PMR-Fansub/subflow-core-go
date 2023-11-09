@@ -25,5 +25,6 @@ func (Workflow) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("workflow_nodes", WorkflowNode.Type),
 		edge.To("tasks", Task.Type),
+		edge.From("team", Team.Type).Ref("workflows"),
 	}
 }

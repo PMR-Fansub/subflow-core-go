@@ -24,5 +24,7 @@ func (TaskTag) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("task", Task.Type).
 			Ref("task_tags"),
+		edge.From("team", Team.Type).
+			Ref("task_tags"),
 	}
 }

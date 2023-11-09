@@ -27,5 +27,7 @@ func (Team) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("users", User.Type),
 		edge.To("tasks", Task.Type),
+		edge.To("task_tags", TaskTag.Type),
+		edge.To("workflows", Workflow.Type),
 	}
 }
